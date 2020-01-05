@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:teepme/bloc/Transaksi/BeliBloc.dart';
-import 'package:teepme/bloc/Transaksi/LocationBloc.dart';
+import 'package:teepme/Test/test-inherit/BeliViewState-test-inherit.dart';
 import 'package:teepme/screen/uiview/transaksi/beli/BeliView.dart';
 import 'package:teepme/theme/MainAppTheme.dart';
 
@@ -114,10 +112,8 @@ class AreaView extends StatelessWidget {
     this.animation,
   }) : super(key: key);
 
-  
   @override
   Widget build(BuildContext context) {
-    final bloc = BeliBloc();
     return AnimatedBuilder(
       animation: animationController,
       builder: (BuildContext context, Widget child) {
@@ -153,10 +149,9 @@ class AreaView extends StatelessWidget {
                     if (imageText == "Buy"){
                       //Navigator.of(context).push(MaterialPageRoute(builder: (context) => new BuyFormView(animationController: animationController,)));
                       Navigator.of(context).push(MaterialPageRoute(builder: (context) => 
-                          new BlocProvider(
-                            bloc: bloc,
-                            child: BeliView(animationController: animationController, bloc: bloc, blocLocation: LocationBloc(), )
-                          ) 
+                        new StateContainerTestInherit(
+                          child: BeliView(animationController: animationController,), 
+                        ) 
                         )
                       );
                     }

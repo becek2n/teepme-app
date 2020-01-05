@@ -1,22 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:teepme/bloc/Transaksi/BeliBloc.dart';
+import 'package:teepme/bloc/Transaksi/LocationBloc.dart';
 import 'package:teepme/screen/uiview/transaksi/beli/BeliConfirmView.dart';
 import 'package:teepme/screen/uiview/transaksi/beli/BeliFormView.dart';
+import 'package:teepme/screen/uiview/transaksi/beli/BeliPaymentView.dart';
 import 'package:teepme/theme/MainAppTheme.dart';
+
 
 
 class BeliView extends StatefulWidget {
   final AnimationController animationController;
-  const BeliView({Key key, this.animationController}) : super(key: key);
+  final BeliBloc bloc;
+  final LocationBloc blocLocation;
+  const BeliView({Key key, this.animationController, this.bloc, this.blocLocation}) : super(key: key);
   
   @override
-  _BeliViewState createState() => new _BeliViewState();
+  BeliViewState createState() => new BeliViewState();
+
 }
 
-class _BeliViewState extends State<BeliView> {
+class BeliViewState extends State<BeliView> {
   var scrollController = ScrollController();
-  List<Widget> listViews = List<Widget>();
   Animation<double> topBarAnimation;
   double topBarOpacity = 0.0;
+  int currentStep = 0;
+  List<Step> spr;
   
   @override
   void initState() {
@@ -24,8 +33,6 @@ class _BeliViewState extends State<BeliView> {
         parent: widget.animationController,
         curve: Interval(0, 0.5, curve: Curves.fastOutSlowIn)));
     
-    addAllListData();
-
     scrollController.addListener(() {
       if (scrollController.offset >= 24) {
         if (topBarOpacity != 1.0) {
@@ -48,26 +55,9 @@ class _BeliViewState extends State<BeliView> {
         }
       } 
     });
+
+    spr = <Step>[];
     super.initState();
-  }
-
-  void addAllListData() {
-    var count = 1;
-    listViews.add(
-      BeliFormView(
-        mainScreenAnimation: Tween(begin: 0.0, end: 1.0).animate(
-            CurvedAnimation(
-                parent: widget.animationController,
-                curve: Interval((1 / count) * 5, 1.0,
-                    curve: Curves.fastOutSlowIn))),
-        mainScreenAnimationController: widget.animationController,
-      ),
-    );
-  }
-
-  Future<bool> getData() async {
-    await Future.delayed(const Duration(milliseconds: 50));
-    return true;
   }
 
   @override
@@ -83,45 +73,15 @@ class _BeliViewState extends State<BeliView> {
             title: Text("Beli", style: TextStyle(color: Colors.blueGrey)),
             centerTitle: true,
           ),
-        backgroundColor: Colors.transparent,
-        body: Stack(
-          children: <Widget>[
-            _typeStep(),
-          ],
-        ),
+        backgroundColor: Colors.white,
+        body: _typeStep(),
       ),
     );
   }
-
-  Widget getMainListViewUI() {
-    return FutureBuilder(
-      future: getData(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return SizedBox();
-        } else {
-          return ListView.builder(
-            shrinkWrap: true,
-            controller: scrollController,
-            padding: EdgeInsets.only(),
-            itemCount: listViews.length,
-            scrollDirection: Axis.vertical,
-            itemBuilder: (context, index) {
-              widget.animationController.forward();
-              return listViews[index];
-            },
-          );
-        }
-      },
-    );
-  }
-  
-  int currentStep = 0;
-  List<Step> spr = <Step>[];
-  List<Step> _getSteps() {
+ 
+  List<Step> _getSteps(BuildContext context) {
     spr = <Step>[
       Step(
-        state: _getState(1),
         title: Text("Pick"),
         content: new Wrap(
               children:<Widget>[
@@ -132,10 +92,13 @@ class _BeliViewState extends State<BeliView> {
                           curve: Interval((1 / 0) * 5, 1.0,
                               curve: Curves.fastOutSlowIn))),
                   mainScreenAnimationController: widget.animationController,
+                  bloc: widget.bloc,
                 ),
+                
               ]
             ),
-        isActive: (currentStep == 0 ? true : false)
+        state: ((widget.bloc.currentState.currentStep == null ? 0 : widget.bloc.currentState.currentStep) >= 1) ? StepState.complete : StepState.indexed,
+        isActive: ((widget.bloc.currentState.currentStep == null ? 0 : widget.bloc.currentState.currentStep) == 0) ? true : false
       ),
       Step(
         title: Text("Confirm"),
@@ -148,69 +111,74 @@ class _BeliViewState extends State<BeliView> {
                           curve: Interval((1 / 0) * 5, 1.0,
                               curve: Curves.fastOutSlowIn))),
                   mainScreenAnimationController: widget.animationController,
+                  bloc: widget.bloc,
+                  blocLocation: widget.blocLocation,
                 ),
               ]
             ),
-        isActive: (currentStep == 1 ? true : false),
-        state: _getState(2),
+        state: ((widget.bloc.currentState.currentStep == null ? 0 : widget.bloc.currentState.currentStep) >= 2) ? StepState.complete : StepState.indexed,
+        isActive: ((widget.bloc.currentState.currentStep == null ? 0 : widget.bloc.currentState.currentStep) == 1) ? true : false
       ),
       Step(
         title: Text("Payment"),
-        content: Text("Konfirmasi Step"),
-        isActive: (currentStep == 2 ? true : false),
-        state: _getState(3),
+        content: new Wrap(
+          children:<Widget>[
+            BeliPaymenView(
+              mainScreenAnimation: Tween(begin: 0.0, end: 1.0).animate(
+                  CurvedAnimation(
+                      parent: widget.animationController,
+                      curve: Interval((1 / 0) * 5, 1.0,
+                          curve: Curves.fastOutSlowIn))),
+              mainScreenAnimationController: widget.animationController,
+            ),
+          ]
+        ),
+        state: ((widget.bloc.currentState.currentStep == null ? 0 : widget.bloc.currentState.currentStep) >= 3) ? StepState.complete : StepState.indexed,
+        isActive: ((widget.bloc.currentState.currentStep == null ? 0 : widget.bloc.currentState.currentStep) == 2) ? true : false
       )
     ];
     return spr;
   }
     
-  Widget _typeStep() => Container(
-    child: Stepper(
-      
-      controlsBuilder: (BuildContext context, {VoidCallback onStepContinue, VoidCallback onStepCancel}) {
-        return Padding(
-          padding: EdgeInsets.all(8.0),
-          child: RaisedButton(
-            onPressed: () {
-              setState(() {
-                currentStep < spr.length - 1 ? currentStep += 1 : currentStep = 0;
-              });
-            },
-            color: Colors.blue,
-            textColor: Colors.white,
-            child: Text('Next'),
-          ),
-        );
-      },
-      
-      steps: _getSteps(),
-      currentStep: currentStep,
-      type: StepperType.horizontal,
-      onStepTapped: (step) {
-        setState(() {
-          currentStep = step;
-          print(step);
-        });
-      },
-      onStepCancel: () {
-        setState(() {
-          currentStep > 0 ? currentStep -= 1 : currentStep = 0;
-        });
-      },
-      onStepContinue: () {
-        setState(() {
-          currentStep < spr.length - 1 ? currentStep += 1 : currentStep = 0;
-        });
-      },
-    ),
-  );
-  
-  StepState _getState(int i) {
-    if (currentStep >= i)
-      return StepState.complete;
-    else
-      return StepState.indexed;
-  }
-
-  
+  Widget _typeStep() =>
+    BlocBuilder(
+    bloc: BlocProvider.of<BeliBloc>(context),
+    builder: (context, TransactionBeliState state) {
+      return Container(
+        child: Theme(
+          data: ThemeData(canvasColor: Colors.white),
+          child: Stepper(
+          steps: _getSteps(context),
+          currentStep: widget.bloc.currentState.currentStep,
+          type: StepperType.horizontal,
+          controlsBuilder: (BuildContext context, {VoidCallback onStepContinue, VoidCallback onStepCancel}) {
+            return Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Container()
+              /*
+              RaisedButton(
+                onPressed: () {
+                  continueStep();
+                },
+                color: Colors.blue,
+                textColor: Colors.white,
+                child: Text('Next'),
+              ),
+              */
+            );
+          },
+          
+          onStepTapped: (step) {
+            if (step <= widget.bloc.currentState.currentStep){
+              widget.bloc.onBack();
+            }else{
+              widget.bloc.onContinue();
+            }
+          },
+          
+        ),
+        )
+      );
+    }
+  );  
 }

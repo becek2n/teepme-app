@@ -1,14 +1,14 @@
 class TransactionModel {
   final String uid;
   final String userName;
-  final String amountAvail;
-  final String rate;
-  final String amountTotal;
+  final double amountAvail;
+  final double rate;
+  final double amountTotal;
 
   TransactionModel.fromJSON(Map<String, dynamic> jsonMap) :
     uid = jsonMap['uid'],
     userName= jsonMap['username'],
-    amountAvail = jsonMap['amountavail'],
-    rate = jsonMap['rate'],
-    amountTotal = jsonMap['amounttotal'];
+    amountAvail = double.parse(jsonMap['amountavail']),
+    rate = double.parse(jsonMap['rate']),
+    amountTotal = double.parse(jsonMap['amounttotal']);
 }

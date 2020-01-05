@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:search_widget/search_widget.dart';
+import 'package:teepme/Test/test-inherit/BeliViewState-test-inherit.dart';
 import 'package:teepme/bloc/Transaksi/BeliBloc.dart';
-import 'package:teepme/bloc/Transaksi/LocationBloc.dart';
 import 'package:teepme/main.dart';
-import 'package:teepme/models/LocationModel.dart';
 import 'package:teepme/models/TransactionModel.dart';
 import 'package:teepme/screen/uiview/location/LocationSearch.dart';
 import 'package:teepme/theme/MainAppTheme.dart';
@@ -18,11 +15,10 @@ class BeliConfirmView extends StatefulWidget {
   final TextEditingController textControllerRate, textControllerVolume;
   final List<TransactionModel> transactionList, transactionSuggestionList;
   final BeliBloc bloc;
-  final LocationBloc blocLocation;
 
   const BeliConfirmView(
     {Key key, this.mainScreenAnimationController, this.mainScreenAnimation, 
-      this.textControllerRate, this.textControllerVolume, this.transactionList, this.transactionSuggestionList, this.bloc, this.blocLocation})
+      this.textControllerRate, this.textControllerVolume, this.transactionList, this.transactionSuggestionList, this.bloc})
     : super(key: key);
   @override
   _BeliConfirmViewState createState() => _BeliConfirmViewState();
@@ -37,14 +33,12 @@ class _BeliConfirmViewState extends State<BeliConfirmView>
   String currencyResult = "";
   List<Widget> listViews = List<Widget>();
   TextEditingController editingController = TextEditingController();
-  final formatCurrency = NumberFormat('#,##0', 'en_US');
+
 
   @override
   void initState() {
     animationController = AnimationController(
         duration: Duration(milliseconds: 2000), vsync: this);
-    
-    widget.blocLocation.onGetData();
     super.initState();
   }
 
@@ -54,8 +48,17 @@ class _BeliConfirmViewState extends State<BeliConfirmView>
     super.dispose();
   }
 
+  List<LeaderBoard> list = <LeaderBoard>[
+    LeaderBoard("Flutter", 54),
+    LeaderBoard("React", 22.5),
+    LeaderBoard("Ionic", 24.7),
+    LeaderBoard("Xamarin", 22.1),
+  ];
+  LeaderBoard _selectedItem;
+
   @override
   Widget build(BuildContext context) {
+    final container = StateContainerTestInherit.of(context);
     return AnimatedBuilder(
       animation: widget.mainScreenAnimationController,
       builder: (BuildContext context, Widget child) {
@@ -65,7 +68,7 @@ class _BeliConfirmViewState extends State<BeliConfirmView>
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              formConfirm(currencyListConfirm(),
+              formConfirm(searchCurrencyView(_currency),
                 BorderRadius.only(
                 topLeft: Radius.circular(8.0),
                 bottomLeft: Radius.circular(8.0),
@@ -76,7 +79,76 @@ class _BeliConfirmViewState extends State<BeliConfirmView>
                 height: 20.0,
               ),
               formConfirm(
-                populateLocationSearch(),
+                Stack(
+                  alignment: Alignment.topLeft,
+                  children: <Widget>[
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        /*
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: TextField(
+                            onChanged: (value) {},
+                            controller: editingController,
+                            decoration: InputDecoration(
+                                labelText: "Search for booth",
+                                hintText: "Search",
+                                prefixIcon: Icon(Icons.location_on),
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(25.0)))),
+                          ),
+                        )
+                        */
+                        SingleChildScrollView(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          child: Column(
+                            children: <Widget>[
+                              const SizedBox(
+                                height: 16,
+                              ),
+                              SearchWidget<LeaderBoard>(
+                                dataList: list,
+                                hideSearchBoxWhenItemSelected: false,
+                                listContainerHeight: MediaQuery.of(context).size.height / 4,
+                                queryBuilder: (query, list) {
+                                  return list
+                                      .where((item) => item.username
+                                          .toLowerCase()
+                                          .contains(query.toLowerCase()))
+                                      .toList();
+                                },
+                                popupListItemBuilder: (item) {
+                                  return PopupListItemWidget(item);
+                                },
+                                selectedItemBuilder: (selectedItem, deleteSelectedItem) {
+                                  return SelectedItemWidget(selectedItem, deleteSelectedItem);
+                                },
+                                // widget customization
+                                noItemsFoundWidget: NoItemsFound(),
+                                textFieldBuilder: (controller, focusNode) {
+                                  return MyTextField(controller, focusNode);
+                                },
+                                onItemSelected: (item) {
+                                  setState(() {
+                                    _selectedItem = item;
+                                  });
+                                },
+                              ),
+                              const SizedBox(
+                                height: 32,
+                              ),
+                              Text(
+                                "${_selectedItem != null ? _selectedItem.username : ""
+                                    "No booth selected"}",
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
                 BorderRadius.only(
                 topLeft: Radius.circular(10.0),
                 bottomLeft: Radius.circular(10.0),
@@ -194,7 +266,7 @@ class _BeliConfirmViewState extends State<BeliConfirmView>
                                 top: 40,
                               ),
                             ),
-                            Text("Total " + formatCurrency.format(double.parse(widget.bloc.currentState.transaction.map<double>((m) => m.amountTotal).reduce((a,b )=>a+b).toString())), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))
+                            Text("Total IDR 9.700.000", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))
                           ],
                         ),
                       ],
@@ -223,11 +295,11 @@ class _BeliConfirmViewState extends State<BeliConfirmView>
                   ),
                   RaisedButton(
                     onPressed: () {
-                      if ( widget.blocLocation.currentState.location == null){
+                      if (_selectedItem == null){
                         Alert(context: context, title: "Alert", desc: "Please select booth location!").show();
                       }
                       else{
-                        widget.bloc.onContinue();
+                        container.updateModel(currentStep: 2);
                       }
                     },
                     color: Colors.blue,
@@ -270,7 +342,18 @@ class _BeliConfirmViewState extends State<BeliConfirmView>
       ),
     );
   }
- 
+  /*
+  void _searchCurrency() {
+    setState(() {
+      visibilityFormResult = true;
+      currencyResult = "partial";
+    });    
+  }
+  */
+  List _currency = [
+    {"volume": "500", "rate" : "13.800", "total" : "6.900.000"},
+    {"volume": "200", "rate" : "14.000", "total" : "2.800.000"},
+  ];
   
   _column(String isSuggestion, String value){
    return Expanded(
@@ -278,8 +361,7 @@ class _BeliConfirmViewState extends State<BeliConfirmView>
         // align the text to the left instead of centered
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          //Text(formatCurrency.format(value), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),),
-          Text(formatCurrency.format(double.parse(value)) , style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),),
+          Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),),
            (isSuggestion == "true") ? RaisedButton(
                   onPressed: () {},
                   color: Colors.blue,
@@ -291,8 +373,8 @@ class _BeliConfirmViewState extends State<BeliConfirmView>
     );
   }
 
-  Widget currencyListConfirm(){
-    if (widget.bloc.currentState.transaction != null){
+  Widget searchCurrencyView(List dataCurrency){
+    if (dataCurrency.length > 0){
       return new Padding(
         padding: const EdgeInsets.only(left: 20.0),
         child: ListView.builder(
@@ -317,20 +399,19 @@ class _BeliConfirmViewState extends State<BeliConfirmView>
                 padding: const EdgeInsets.all(0.0),
                 child: Row(
                   children: <Widget>[
-                    _column("", widget.bloc.currentState.transaction[index].amountAvail.toString()),
-                    _column("", widget.bloc.currentState.transaction[index].rate.toString()),
-                    _column("", widget.bloc.currentState.transaction[index].amountTotal.toString()),
+                    _column("", dataCurrency[index]["volume"]),
+                    _column("", dataCurrency[index]["rate"]),
+                    _column("", dataCurrency[index]["total"]),
                   ],
                 ),
               ),
             );
           },
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: widget.bloc.currentState.transaction.length + 1,
+          itemCount: dataCurrency.length + 1,
           shrinkWrap: true,
-        ),
+          ),
       );
-
     }
     else{
       return new Padding(
@@ -348,134 +429,4 @@ class _BeliConfirmViewState extends State<BeliConfirmView>
       );
     }
   }
-
-  Widget populateLocationSearch(){
-    return BlocBuilder(
-      bloc: widget.blocLocation,
-      builder: (BuildContext context, LocationState state) {
-        if (state.locationList == null){
-          return Container();
-        }else{
-          return Stack(
-            alignment: Alignment.topLeft,
-            children: <Widget>[
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    child: Column(
-                      children: <Widget>[
-                        const SizedBox(
-                          height: 16,
-                        ),
-                        SearchWidget<LocationModel>(
-                          dataList: state.locationList ,
-                          hideSearchBoxWhenItemSelected: false,
-                          listContainerHeight: MediaQuery.of(context).size.height / 4,
-                          queryBuilder: (query, listLocation) {
-                            return listLocation
-                                .where((item) => item.name
-                                    .toLowerCase()
-                                    .contains(query.toLowerCase()))
-                                .toList();
-                          },
-                          popupListItemBuilder: (item) {
-                            //return PopupListItemWidget(item);
-                            return Container(
-                              padding: EdgeInsets.only(bottom: 20.0),
-                              child: Row(
-                                children: <Widget>[
-                                  new Padding(
-                                    padding: new EdgeInsets.only(right: 10.0, left: 10.0),
-                                    child: Column(
-                                      children: <Widget>[
-                                        //new Image.asset(item.image, width: 30.0, alignment: Alignment.centerLeft, ),
-                                        Icon(Icons.location_on)
-                                      ],
-                                    )
-                                  ),
-                                  new Expanded(
-                                    child: new Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: <Widget>[
-                                        new Text(item.name, style: TextStyle(fontSize: 20)),
-                                        new Container(
-                                          margin: const EdgeInsets.only(top: 5.0),
-                                          child: new Text(item.address),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              )
-                            );
-                          },
-                          selectedItemBuilder: (selectedItem, deleteSelectedItem) {
-                            //return SelectedItemWidget(selectedItem, deleteSelectedItem);
-                            return SizedBox();
-                          },
-                          // widget customization
-                          noItemsFoundWidget: NoItemsFound(),
-                          textFieldBuilder: (controller, focusNode) {
-                            return MyTextField(controller, focusNode);
-                          },
-                          onItemSelected: (item) {
-                            widget.blocLocation.onLocationSelected(item);
-                          },
-                        ),
-                        const SizedBox(
-                          height: 32,
-                        ),
-                        selectedLocation()
-                        
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          );
-        }
-      }
-    );
-  }
-
-  Widget selectedLocation() {
-    if (widget.blocLocation.currentState.location == null){
-      return Text("No selected location");
-    }
-    else{
-      return Container(
-        padding: EdgeInsets.only(bottom: 20.0),
-        child: Row(
-          children: <Widget>[
-            
-              new Padding(
-              padding: new EdgeInsets.only(right: 10.0, left: 10.0),
-              child: Column(
-                children: <Widget>[
-                  //new Image.asset(item.image, width: 30.0, alignment: Alignment.centerLeft, ),
-                  Icon(Icons.location_on)
-                ],
-              )
-            ),
-            new Expanded(
-              child: new Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  new Text(widget.blocLocation.currentState.location.name, style: TextStyle(fontSize: 20)),
-                  new Container(
-                    margin: const EdgeInsets.only(top: 5.0),
-                    child: new Text(widget.blocLocation.currentState.location.address),
-                  ),
-                ],
-              ),
-            ),  
-          ],
-        )
-      );
-    }
-  }
 }
-

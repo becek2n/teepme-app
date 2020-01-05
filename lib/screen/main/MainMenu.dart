@@ -1,3 +1,4 @@
+import 'package:teepme/screen/main/MainMainSpecial.dart';
 import 'package:teepme/screen/uiview/CurrencyUpdateView.dart';
 import 'package:teepme/screen/uiview/MenuFindView.dart';
 import 'package:teepme/screen/uiview/MenuView.dart';
@@ -59,7 +60,13 @@ class _MainMenu extends State<MainMenu>
 
   void addAllListData() {
     var count = 9;
+    
+    listViews.add(
+      MainMainSpecial(),
+    );
 
+    /*
+    //tutorial
     listViews.add(
       TutorialView(
         animation: Tween(begin: 0.0, end: 1.0).animate(CurvedAnimation(
@@ -69,7 +76,7 @@ class _MainMenu extends State<MainMenu>
         animationController: widget.animationController,
       ),
     );
-
+    */
     listViews.add(
       MenuView(
         mainScreenAnimation: Tween(begin: 0.0, end: 1.0).animate(

@@ -37,6 +37,7 @@ class _CurrencyUpdateState extends State<CurrencyUpdateView>
     animationController = AnimationController(
         duration: Duration(milliseconds: 2000), vsync: this);
     
+    if (!mounted) return;
     APIWeb().load(ScrapCurrencyRepository.getData).then((scrapCurrencyData) => {
       setState(() => {
         _scrapCurrency = scrapCurrencyData

@@ -1,12 +1,17 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:teepme/models/MenuTabModel.dart';
 import 'package:teepme/screen/main/BottomNavigation.dart';
 import 'package:teepme/screen/main/MainMenu.dart';
+import 'package:teepme/screen/uiview/user/LoginView.dart';
 import 'package:teepme/theme/MainAppTheme.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  enablePlatformOverrideForDesktop();
   runApp(new MyApp());
 
   SystemChrome.setPreferredOrientations([
@@ -14,6 +19,13 @@ void main() {
     DeviceOrientation.portraitDown
   ]);
 }
+
+void enablePlatformOverrideForDesktop() {
+  if (!kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux)) {
+    debugDefaultTargetPlatformOverride = TargetPlatform.fuchsia;
+  }
+}
+
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
@@ -25,7 +37,8 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       debugShowCheckedModeBanner: false,
-      home: MyHomePage(title: ''),
+      //home: MyHomePage(title: ''),
+      home: LoginView(),
     );
   }
 }
