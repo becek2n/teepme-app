@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:teepme/bloc/Transaksi/LocationBloc.dart';
-import 'package:teepme/screen/uiview/location/LoctaionView.dart';
+import 'package:teepme/screen/uiview/location/LocationView.dart';
 import 'package:teepme/theme/MainAppTheme.dart';
 
 class MenuFindView extends StatelessWidget {

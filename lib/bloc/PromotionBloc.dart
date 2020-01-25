@@ -13,7 +13,7 @@ class PromotionBloc extends Bloc<PromotionEvent, PromotionState> {
   PromotionState get initialState => PromotionState.initial();
 
   @override
-  Stream<PromotionState> mapEventToState(PromotionState state, PromotionEvent event) async* {
+  Stream<PromotionState> mapEventToState(PromotionEvent event) async* {
     if (event is GetPromotionEvent) {
       final data = await APIWeb().load(PromotionRepository.getData);
       yield PromotionState(promotionList: data);

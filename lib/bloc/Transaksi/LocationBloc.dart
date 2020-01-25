@@ -20,7 +20,7 @@ class LocationBloc extends Bloc<LocationEvent, LocationState> {
   LocationState get initialState => LocationState.initial();
 
   @override
-  Stream<LocationState> mapEventToState(LocationState state, LocationEvent event) async* {
+  Stream<LocationState> mapEventToState(LocationEvent event) async* {
     if (event is GetLocationEvent) {
       final data = await APIWeb().load(LocationRepository.getData);
       yield LocationState(location: currentState.location, locationList: data);

@@ -37,10 +37,14 @@ dependencies:
   flutter_hooks: ^0.7.0
   search_widget: ^1.0.0
   rflutter_alert: ^1.0.2
-  flutter_bloc: ^0.6.0
+  flutter_bloc: ^0.21.0
   progress_dialog: ^1.2.0
   sliding_up_panel: ^0.3.4
   google_maps_flutter: ^0.5.11
+  loading: ^1.0.2
+  bot_toast: ^2.2.1
+  overlay_support: ^1.0.2
+  shared_preferences: any
   #location: ^2.3.5
   #geolocator: ^5.1.4+2
   

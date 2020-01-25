@@ -64,7 +64,8 @@ List imgSpesial = [
                         child: ClipRRect(
                           borderRadius: BorderRadius.all(Radius.circular(0.0)),
                           child: Image.network(
-                            "http://172.20.10.10:3001/" + url.images,
+                            //"http://172.20.10.10:3001/" + url.images,
+                            "http://192.168.43.176:3001/" + url.images,
                             fit: BoxFit.fill,
                             width: 600.0,
                           ),

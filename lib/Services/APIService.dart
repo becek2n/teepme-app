@@ -8,7 +8,8 @@ class APIService<T> {
 }
 
 class APIWeb{
-  final String urlHost = 'http://172.20.10.10:3001/'; 
+  //final String urlHost = 'http://172.20.10.10:3001/'; 
+  final String urlHost = 'http://192.168.43.176:3001/'; 
   Future<T> load<T>(APIService<T> resource) async {
       final response = await http.get(urlHost + resource.url);
       if(response.statusCode == 200) {

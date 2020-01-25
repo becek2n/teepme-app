@@ -1,14 +1,15 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:teepme/screen/main/MainMainSpecial.dart';
 import 'package:teepme/screen/uiview/CurrencyUpdateView.dart';
 import 'package:teepme/screen/uiview/MenuFindView.dart';
 import 'package:teepme/screen/uiview/MenuView.dart';
-import 'package:teepme/screen/uiview/TutorialView.dart';
 import 'package:teepme/screen/uiview/titleView.dart';
 import 'package:teepme/theme/MainAppTheme.dart';
 import 'package:flutter/material.dart';
 
 import 'AppMainBar.dart';
 
+  bool dataPref;
 
 class MainMenu extends StatefulWidget {
   final AnimationController animationController;
@@ -55,6 +56,9 @@ class _MainMenu extends State<MainMenu>
         }
       } 
     });
+
+    getSharePref();
+
     super.initState();
   }
 
@@ -188,55 +192,63 @@ class _MainMenu extends State<MainMenu>
     );
   */
   }
-
+  
+  SharedPreferences preferences;
+  getSharePref() async{
+    preferences = await SharedPreferences.getInstance();
+    var data = preferences.getBool("isConnect");
+    setState(() {
+      dataPref = data;
+    });
+    
+  }
+  
   Future<bool> getData() async {
+    
     await Future.delayed(const Duration(milliseconds: 50));
+    
     return true;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: MainAppTheme.background,
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: Stack(
-          children: <Widget>[
-            getMainListViewUI(),
-            AppBarMainScreen(animationController: widget.animationController, topBarOpacity: topBarOpacity,),
-            SizedBox(
-              height: MediaQuery.of(context).padding.bottom,
-            )
-          ],
-        ),
-      ),
+    return FutureBuilder(
+      future: getData(),
+      builder: (context, snapshot) {
+        return Container(
+          color: MainAppTheme.background,
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            body: Stack(
+              children: <Widget>[
+                getMainListViewUI(),
+                AppBarMainScreen(animationController: widget.animationController, topBarOpacity: topBarOpacity,),
+                SizedBox(
+                  height: MediaQuery.of(context).padding.bottom,
+                )
+              ],
+            ),
+          ),
+        );
+      }
     );
   }
 
   Widget getMainListViewUI() {
-    return FutureBuilder(
-      future: getData(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return SizedBox();
-        } else {
-          return ListView.builder(
-            shrinkWrap: true,
-            controller: scrollController,
-            padding: EdgeInsets.only(
-              top: AppBar().preferredSize.height +
-                  MediaQuery.of(context).padding.top +
-                  24,
-              bottom: 62 + MediaQuery.of(context).padding.bottom,
-            ),
-            itemCount: listViews.length,
-            scrollDirection: Axis.vertical,
-            itemBuilder: (context, index) {
-              widget.animationController.forward();
-              return listViews[index];
-            },
-          );
-        }
+    return ListView.builder(
+      shrinkWrap: true,
+      controller: scrollController,
+      padding: EdgeInsets.only(
+        top: AppBar().preferredSize.height +
+            MediaQuery.of(context).padding.top +
+            24,
+        bottom: 62 + MediaQuery.of(context).padding.bottom,
+      ),
+      itemCount: listViews.length,
+      scrollDirection: Axis.vertical,
+      itemBuilder: (context, index) {
+        widget.animationController.forward();
+        return listViews[index];
       },
     );
   }

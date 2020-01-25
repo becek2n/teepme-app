@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:teepme/bloc/Master/CurrencyBloc.dart';
+import 'package:teepme/bloc/Master/PaymentBloc.dart';
 import 'package:teepme/bloc/Transaksi/BeliBloc.dart';
 import 'package:teepme/bloc/Transaksi/LocationBloc.dart';
 import 'package:teepme/screen/uiview/transaksi/beli/BeliView.dart';
@@ -62,7 +64,7 @@ class _MenuViewState extends State<MenuView>
                   shrinkWrap: true,
                   padding:
                       EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 16),
-                  physics: BouncingScrollPhysics(),
+                  physics: const NeverScrollableScrollPhysics(),
                   scrollDirection: Axis.vertical,
                   children: List.generate(
                     areaListData.length,
@@ -117,76 +119,90 @@ class AreaView extends StatelessWidget {
   
   @override
   Widget build(BuildContext context) {
-    final bloc = BeliBloc();
+    //TransactionBeliBloc bloc = TransactionBeliBloc();
     return AnimatedBuilder(
-      animation: animationController,
-      builder: (BuildContext context, Widget child) {
-        return FadeTransition(
-          opacity: animation,
-          child: new Transform(
-            transform: new Matrix4.translationValues(
-                0.0, 50 * (1.0 - animation.value), 0.0),
-            child: Container(
-              decoration: BoxDecoration(
-                color: MainAppTheme.white,
-                borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(8.0),
-                    bottomLeft: Radius.circular(8.0),
-                    bottomRight: Radius.circular(8.0),
-                    topRight: Radius.circular(8.0)),
-                boxShadow: <BoxShadow>[
-                  BoxShadow(
-                      color: MainAppTheme.grey.withOpacity(0.4),
-                      offset: Offset(1.1, 1.1),
-                      blurRadius: 10.0),
-                ],
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  focusColor: Colors.transparent,
-                  highlightColor: Colors.transparent,
-                  hoverColor: Colors.transparent,
-                  borderRadius: BorderRadius.all(Radius.circular(8.0)),
-                  splashColor: MainAppTheme.nearlyDarkBlue.withOpacity(0.2),
-                  onTap: () {
-                    if (imageText == "Buy"){
-                      //Navigator.of(context).push(MaterialPageRoute(builder: (context) => new BuyFormView(animationController: animationController,)));
-                      Navigator.of(context).push(MaterialPageRoute(builder: (context) => 
-                          new BlocProvider(
-                            bloc: bloc,
-                            child: BeliView(animationController: animationController, bloc: bloc, blocLocation: LocationBloc(), )
-                          ) 
-                        )
-                      );
-                    }
-                  },
-                  child: Column(
-                    children: <Widget>[
-                      Padding(
-                        padding: EdgeInsets.only(top: 0, left: 16, right: 16),
-                        child: Image.asset(imagepath),
-                      ),
-                      Text(
-                        imageText,
-                        textAlign: TextAlign.left,
-                        style: TextStyle(
-                          fontFamily: MainAppTheme.fontName,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 18,
-                          letterSpacing: 0.5,
-                          color: MainAppTheme.lightText,
-                        ),
-                      ),
+        animation: animationController,
+        builder: (BuildContext context, Widget child) {
+          return FadeTransition(
+            opacity: animation,
+            child: new Transform(
+              transform: new Matrix4.translationValues(
+                  0.0, 50 * (1.0 - animation.value), 0.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: MainAppTheme.white,
+                  borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(8.0),
+                      bottomLeft: Radius.circular(8.0),
+                      bottomRight: Radius.circular(8.0),
+                      topRight: Radius.circular(8.0)),
+                  boxShadow: <BoxShadow>[
+                    BoxShadow(
+                        color: MainAppTheme.grey.withOpacity(0.4),
+                        offset: Offset(1.1, 1.1),
+                        blurRadius: 10.0),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    focusColor: Colors.transparent,
+                    highlightColor: Colors.transparent,
+                    hoverColor: Colors.transparent,
+                    borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                    splashColor: MainAppTheme.nearlyDarkBlue.withOpacity(0.2),
+                    onTap: () {
+                      if (imageText == "Buy"){
+                        //Navigator.of(context).push(MaterialPageRoute(builder: (context) => new BuyFormView(animationController: animationController,)));
+                        Navigator.of(context).push(MaterialPageRoute(builder: (context) => 
+                            //new BlocProvider(
+                            //  bloc: bloc,
+                            //  child: BeliView(animationController: animationController, blocLocation: LocationBloc(),)
+                            //)
 
-                    ],
+                            new BlocProvider<BeliBloc>(
+                              builder: (BuildContext context) => BeliBloc(),
+                              child: BlocProvider<CurrencyBloc>(
+                                builder: (BuildContext context) => CurrencyBloc(),
+                                child: BlocProvider<LocationBloc>(
+                                  builder: (BuildContext context) => LocationBloc(),
+                                  child: BlocProvider<PaymentBloc>(
+                                    builder: (BuildContext context) => PaymentBloc(),
+                                    child: BeliView(animationController: animationController)
+                                  )
+                                )
+                              )
+                            )
+                          )
+                        );
+                      }
+                    },
+                    child: Column(
+                      children: <Widget>[
+                        Padding(
+                          padding: EdgeInsets.only(top: 0, left: 16, right: 16),
+                          child: Image.asset(imagepath),
+                        ),
+                        Text(
+                          imageText,
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                            fontFamily: MainAppTheme.fontName,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 18,
+                            letterSpacing: 0.5,
+                            color: MainAppTheme.lightText,
+                          ),
+                        ),
+
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
     );
   }
 }

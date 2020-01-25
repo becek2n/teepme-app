@@ -49,7 +49,7 @@ class _BeliFormViewState extends State<BeliFormView>
   
   void getDataAPIDropdown(){
     //bind data dropdown
-    APIWeb().load(CurrencyRepositories.getData).then((currencyData) => {
+    APIWeb().load(CurrencyRepository.getData).then((currencyData) => {
       setState(() => {
         _currencySelect = currencyData
       })

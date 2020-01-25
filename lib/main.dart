@@ -1,8 +1,11 @@
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:progress_dialog/progress_dialog.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:teepme/models/MenuTabModel.dart';
 import 'package:teepme/screen/main/BottomNavigation.dart';
 import 'package:teepme/screen/main/MainMenu.dart';
@@ -70,6 +73,7 @@ class _MyHomePageState extends State<MyHomePage>
       tab.isSelected = false;
     });
     tabIconsList[0].isSelected = true;
+    
 
     animationController =
         AnimationController(duration: Duration(milliseconds: 600), vsync: this);
@@ -83,31 +87,79 @@ class _MyHomePageState extends State<MyHomePage>
     super.dispose();
   }
 
+  ProgressDialog pr;
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: MainAppTheme.background,
-      
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: FutureBuilder(
-          future: getData(),
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              return SizedBox();
-            } else {
-              return Stack(
-                children: <Widget>[
-                  tabBody,
-                  bottomBar(),
-                ],
-              );
-            }
-          },
-        ),
-      ),
+    pr = new ProgressDialog(context);
+    return FutureBuilder(
+      future: testConnection(),
+      builder: (context, snapshot) {
+        if(snapshot.connectionState == ConnectionState.waiting) {
+          Future.delayed(Duration.zero, () => pr.show());
+          return Container();
+        } else{
+          Future.delayed(Duration(milliseconds: 2)).then((onvalue) {
+            pr.hide();
+          });
+          return Container(
+            color: MainAppTheme.background,
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              body: FutureBuilder(
+                future: getData(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return SizedBox();
+                  } else {
+                    return Stack(
+                      children: <Widget>[
+                        tabBody,
+                        bottomBar(),
+                      ],
+                    );
+                  }
+                },
+              ),
+            ),
+          );
+        }
+      }
     );
   }
+
+  SharedPreferences preferences;
+  Future<bool> testConnection() async{
+    bool result;
+    preferences = await SharedPreferences.getInstance();
+    InternetAddress.lookup("google.com")
+      .then((data) {
+        result = true;
+        preferences.setBool("isConnect", true);
+      }).catchError((e) {
+        //alertDialogCuprtino(context, "Error", "Connection lost", "OK");
+        preferences.setBool("isConnect", false);
+    });
+    /*
+    try{
+      await Future.delayed(const Duration(seconds: 2));
+      final check = await InternetAddress.lookup("http://172.20.10.10:3001/");
+      
+      if (check.isNotEmpty)
+        result = true;
+      preferences = await SharedPreferences.getInstance();
+      preferences.setBool("isConnect", true);
+    }catch(_){
+      //Alert(context: context, title: "Alert", desc: "Connection lost!").show();
+      //_showAlert(context);
+      _alertDialogCuprtino();
+      preferences = await SharedPreferences.getInstance();
+      preferences.setBool("isConnect", false);
+    }
+    */
+    return result;
+  }
+
+  
 
   Future<bool> getData() async {
     await Future.delayed(const Duration(milliseconds: 200));

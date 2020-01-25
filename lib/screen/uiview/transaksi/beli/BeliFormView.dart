@@ -1,10 +1,12 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
+import 'package:teepme/bloc/Master/CurrencyBloc.dart';
 import 'package:teepme/bloc/Transaksi/BeliBloc.dart';
 import 'package:teepme/main.dart';
+import 'package:teepme/models/CurrencyModel.dart';
 import 'package:teepme/models/TransactionModel.dart';
 import 'package:teepme/theme/MainAppTheme.dart';
 
@@ -13,9 +15,8 @@ import 'package:progress_dialog/progress_dialog.dart';
 class BeliFormView extends StatefulWidget {
   final AnimationController mainScreenAnimationController;
   final Animation mainScreenAnimation;
-  final BeliBloc bloc;
   const BeliFormView(
-      {Key key, this.mainScreenAnimationController, this.mainScreenAnimation, this.bloc})
+      {Key key, this.mainScreenAnimationController, this.mainScreenAnimation})
       : super(key: key);
   @override
   _BeliFormViewState createState() => _BeliFormViewState();
@@ -28,39 +29,18 @@ class _BeliFormViewState extends State<BeliFormView>
 
   final textControllerRate = TextEditingController(), 
         textControllerVolume = TextEditingController();
-  double sumOfCurrency = 0;
-  final formatCurrency = NumberFormat('#,##0', 'en_US');
-
-  Future<bool> getData() async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    return true;
-  }
   
-  ProgressDialog pr;
-
-  void _searchCurrency() {
-    pr = new ProgressDialog(context);
-    
-    if (textControllerRate.text == ""){
-        Alert(context: context, title: "Alert", desc: "Please input rate!").show();
-    }else if(textControllerVolume.text == ""){
-        Alert(context: context, title: "Alert", desc: "Please input volume!").show();
-    }else{
-      pr.show();
-      Future.delayed(Duration(seconds: 2)).then((onvalue) {
-        widget.bloc.onSearchRate(double.parse(textControllerRate.text), double.parse(textControllerVolume.text));
-        pr.hide();
-      });
-    }
-    
-  }
+  String currencyCode;
+  CurrencyModel modelCorrency;
+  final formatCurrency = NumberFormat('#,##0', 'en_US');
 
   @override
   void initState() {
     animationController = AnimationController(
         duration: Duration(milliseconds: 2000), vsync: this);
-    //getDataAPIDropdown();
-    widget.bloc.getDrowpDown();
+    
+    final bloc = BlocProvider.of<CurrencyBloc>(context); 
+    bloc.onGetData();
     super.initState();
   }
 
@@ -70,69 +50,96 @@ class _BeliFormViewState extends State<BeliFormView>
     super.dispose();
   }
 
+  Future<bool> getData() async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    return true;
+  }
+  
+  ProgressDialog pr;
+
+  void _searchCurrency() {
+    final bloc = BlocProvider.of<BeliBloc>(context); 
+    pr = new ProgressDialog(context);
+    //if (currencyCode == null){
+    //  Alert(context: context, title: "Alert", desc: "Please select currency!").show();
+    //}else 
+    if (textControllerRate.text == ""){
+      Alert(context: context, title: "Alert", desc: "Please input rate!").show();
+    }else if(textControllerVolume.text == ""){
+        Alert(context: context, title: "Alert", desc: "Please input volume!").show();
+    }else{
+      bloc.onSearchRate(currencyCode, double.parse(textControllerRate.text), double.parse(textControllerVolume.text));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder(
-      bloc: widget.bloc,
-      builder: (BuildContext context, TransactionBeliState state) {
-        if (state.currencyData == null){
-          return Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SpinKitRing(color: Colors.lightGreenAccent),
-              ],
-          );
+    pr = new ProgressDialog(context);
+    return FutureBuilder(
+      future: getData(),
+      builder: (context, snapshot) {
+        if(snapshot.data == null){
+          return Container();
         }else{
-          return AnimatedBuilder(
-            animation: widget.mainScreenAnimationController,
-            builder: (BuildContext context, Widget child) {
-              return Padding(
-                  padding: const EdgeInsets.all(0.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      //visibilityFormInput ? formInput() : new Container(),
-                      widget.bloc.currentState.visibilityFormInput ? formInput() : new Container(),
-                      SizedBox(
-                        height: 20.0,
+          final bloc = BlocProvider.of<BeliBloc>(context); 
+          final blocCurrency = BlocProvider.of<CurrencyBloc>(context); 
+          return BlocBuilder(
+            bloc: blocCurrency,
+            builder: (BuildContext context, CurrencyState state) {
+              if (state.list == null){
+                  Future.delayed(Duration.zero, () => pr.show());
+                return Container();
+              }else{
+                Future.delayed(Duration(milliseconds: 2)).then((onvalue) {
+                  pr.hide();
+                });
+                return AnimatedBuilder(
+                  animation: widget.mainScreenAnimationController,
+                  builder: (BuildContext context, Widget child) {
+                    return Padding(
+                      padding: const EdgeInsets.all(0.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          bloc.currentState.visibilityFormInput ? formInput() : new Container(),
+                          SizedBox(
+                            height: 20.0,
+                          ),
+                          bloc.currentState.visibilityFormResult ? formSearchResult() : new Container(),
+                          
+                        ],
                       ),
-                      //visibilityFormResult ? formSearchResult() : new Container(),
-                      widget.bloc.currentState.visibilityFormResult ? formSearchResult() : new Container(),
-                      
-                    ],
-                  ),
-              );
-            },
+                    );
+                  },
+                );
+              }
+            }
           );
         }
       }
     );
+        
   }
 
   Widget formInput() {
-    return BlocBuilder(
-      bloc: widget.bloc,
-      builder: (BuildContext context, TransactionBeliState state) {
-        if (state.currencyData == null){
-          return Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SpinKitRing(color: Colors.lightGreenAccent),
-              ],
-          );
-        }
-        else{
-
-          return FutureBuilder(
-            future: getData(),
-            builder: (context, snapshot){
-              if(!snapshot.hasData){
+    return FutureBuilder(
+      future: getData(),
+      builder: (context, snapshot) {
+        if(snapshot.data == null){
+          return Container();
+        }else{
+          final bloc = BlocProvider.of<BeliBloc>(context); 
+          final blocCurrency = BlocProvider.of<CurrencyBloc>(context); 
+          return BlocBuilder(
+            bloc: blocCurrency,
+            builder: (BuildContext context, CurrencyState state) {
+              if(state.list == null){
                 return Container();
-              }
-              else{
-                textControllerRate.text = widget.bloc.currentState.rate.toString().replaceAll(".0", ""); 
-                textControllerVolume.text = widget.bloc.currentState.volume.toString().replaceAll(".0", ""); 
+              }else{
+                modelCorrency = modelCorrency ?? state.currencyModel;
+                textControllerRate.text = (textControllerRate.text == "0" || textControllerRate.text == "" ) ? bloc.currentState.rate.toString().replaceAll(".0", "") : textControllerRate.text; 
+                textControllerVolume.text = (textControllerVolume.text == "0" || textControllerVolume.text == "" ) ? bloc.currentState.volume.toString().replaceAll(".0", "") : textControllerVolume.text;
                 return Container(
                   padding: const EdgeInsets.only(top: 0.0),
                   decoration: BoxDecoration(
@@ -158,15 +165,19 @@ class _BeliFormViewState extends State<BeliFormView>
                       children: <Widget>[
                         new DropdownButtonFormField<String>(
                           decoration:  const InputDecoration(labelText: 'Currency'),
-                            value: widget.bloc.currentState.currencyCode,
-                            items: widget.bloc.currentState.currencyData
+                            value: (state.currencyModel == null ) ? null : state.currencyModel.currencyCode,
+                            items: state.list
                               .map((label) => DropdownMenuItem(
                               child: Text(label.currencyCode.toString()),
-                              value: label.currencyCode.toString(),
+                              value: label.currencyCode,
                             )).toList(),
                             hint: Text(''),
                             onChanged: (value) {
-                              widget.bloc.onCurrencyChange(value);
+                              var modelSelected = state.list.where((x) => x.currencyCode == value).single;
+                              blocCurrency.onSelected(modelSelected);
+                              setState(() {
+                                currencyCode = value;
+                              });
                             },
                           ),
                         new TextFormField(
@@ -197,16 +208,21 @@ class _BeliFormViewState extends State<BeliFormView>
           );
         }
       }
-     );
+    );
   }
+
   Widget formSearchResult() {
+    final bloc = BlocProvider.of<BeliBloc>(context); 
+    pr = new ProgressDialog(context);
     return new FutureBuilder(
       future: getData(),
       builder: (context, snapshot){
         if(!snapshot.hasData){
+          Future.delayed(Duration.zero, () => pr.show());
           return Container();
         }
         else{
+          Future.delayed(Duration(milliseconds: 2), () => pr.hide());
           return Container(
             padding: const EdgeInsets.only(top: 0.0),
             decoration: BoxDecoration(
@@ -236,8 +252,8 @@ class _BeliFormViewState extends State<BeliFormView>
                   new Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
-                      Text("Max Rate : " + formatCurrency.format(widget.bloc.currentState.rate), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                      Text("Volume : " + formatCurrency.format(widget.bloc.currentState.volume), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))
+                      Text("Max Rate : " + formatCurrency.format(bloc.currentState.rate), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      Text("Volume : " + formatCurrency.format(bloc.currentState.volume), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))
                     ]
                   ),
                   new SizedBox(
@@ -255,7 +271,7 @@ class _BeliFormViewState extends State<BeliFormView>
                   new SizedBox(
                     height: 10.0,
                   ),
-                  (widget.bloc.currentState.currencyResult == "avail") ? searchCurrencyView(widget.bloc.currentState.transaction, "false") : formSearchResultRateAvailPartial(_currencyPartial, _currencySuggestion),
+                  (bloc.currentState.currencyResult == "avail") ? searchCurrencyView(bloc.currentState.transaction, "false") : formSearchResultRateAvailPartial(_currencyPartial, _currencySuggestion),
                   new Padding(
                     padding: const EdgeInsets.all(10.0),
                     child: Container(
@@ -267,7 +283,7 @@ class _BeliFormViewState extends State<BeliFormView>
                         )
                       ),
                       child: Text(
-                        "Total IDR " + formatCurrency.format(sumOfCurrency), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)
+                        "Total IDR " + formatCurrency.format(double.parse(bloc.currentState.transaction.map<double>((m) => m.amountTotal).reduce((a,b )=>a+b).toString())), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)
                         ),
                     )
                   ),
@@ -277,7 +293,7 @@ class _BeliFormViewState extends State<BeliFormView>
                       RaisedButton(
                         onPressed: () {
                           setState(() {
-                            widget.bloc.onCancelSearch();
+                            bloc.onCancelSearch();
                           });
                         },
                         color: Colors.blue,
@@ -286,10 +302,10 @@ class _BeliFormViewState extends State<BeliFormView>
                       ),
                       RaisedButton(
                         onPressed: () {
-                          if (widget.bloc.currentState.transaction == null){
+                          if (bloc.currentState.transaction == null){
                             Alert(context: context, title: "Alert", desc: "Rate not found!").show();
                           }else{
-                            widget.bloc.onContinue();
+                            bloc.onContinue();
                           }
                         },
                         color: Colors.blue,
@@ -304,7 +320,7 @@ class _BeliFormViewState extends State<BeliFormView>
           );
         }
       },
-    );   
+    );
   }
   
   List _currencyPartial = [];
