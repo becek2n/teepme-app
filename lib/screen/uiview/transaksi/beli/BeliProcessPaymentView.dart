@@ -7,27 +7,28 @@ import 'package:progress_dialog/progress_dialog.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:teepme/bloc/Master/CurrencyBloc.dart';
-import 'package:teepme/bloc/Transaksi/BeliBloc.dart';
+import 'package:teepme/bloc/Transaksi/BuyBloc.dart';
 import 'package:teepme/bloc/Master/PaymentBloc.dart';
 import 'package:teepme/bloc/Transaksi/LocationBloc.dart';
+import 'package:teepme/models/TransactionModel.dart';
 import 'package:teepme/screen/uiview/widget_collection/PopupAlert.dart';
 import 'package:teepme/theme/MainAppTheme.dart';
 import 'package:teepme/main.dart';
 import 'package:teepme/globals.dart' as globals;
 
 
-class BeliPaymenView extends StatefulWidget {
+class BeliProcessPaymentView extends StatefulWidget {
   final AnimationController mainScreenAnimationController;
   final Animation mainScreenAnimation;
   
-  const BeliPaymenView(
+  const BeliProcessPaymentView(
       {Key key, this.mainScreenAnimationController, this.mainScreenAnimation})
       : super(key: key);
   @override
-  _BeliPaymenViewState createState() => _BeliPaymenViewState();
+  _BeliProcessPaymentViewState createState() => _BeliProcessPaymentViewState();
 }
 
-class _BeliPaymenViewState extends State<BeliPaymenView>
+class _BeliProcessPaymentViewState extends State<BeliProcessPaymentView>
     with TickerProviderStateMixin {
   AnimationController animationController;
   final formatCurrency = NumberFormat('#,##0', 'en_US');
@@ -170,7 +171,7 @@ class _BeliPaymenViewState extends State<BeliPaymenView>
   //Widget formProcessPayment(PaymentModel model) {
   Widget formProcessPayment() {
     pr = new ProgressDialog(context, isDismissible: false);
-    final bloc = BlocProvider.of<BeliBloc>(context); 
+    final bloc = BlocProvider.of<BuyBloc>(context); 
     final blocPay = BlocProvider.of<PaymentBloc>(context); 
     return new FutureBuilder(
       future: getData(),
@@ -183,8 +184,8 @@ class _BeliPaymenViewState extends State<BeliPaymenView>
         else{
           return BlocBuilder(
             bloc: bloc,
-            builder: (context, TransactionBeliState state) {
-              if (state.transaction == null){
+            builder: (context, BuyState state) {
+              if (state.cartList == null){
                 return Container();
               }
               else{
@@ -259,11 +260,11 @@ class _BeliPaymenViewState extends State<BeliPaymenView>
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: <Widget>[
-                                  Text("Rate Total", style: TextStyle(fontSize: 14, color: Colors.grey)),
+                                  Text("Volume", style: TextStyle(fontSize: 14, color: Colors.grey)),
                                   SizedBox(
                                     height: 10.0,
                                   ),
-                                  Text(formatCurrency.format(double.parse(state.transaction.map<double>((m) => m.rate).reduce((a,b )=>a+b).toString())), style: TextStyle(fontSize: 16)),
+                                  Text(formatCurrency.format(double.parse(state.cartList.map<int>((m) => m.volume).reduce((a,b )=>a+b).toString())), style: TextStyle(fontSize: 16)),
                                 ],
                               ) 
                             )
@@ -293,7 +294,7 @@ class _BeliPaymenViewState extends State<BeliPaymenView>
                                   SizedBox(
                                     height: 10.0,
                                   ),
-                                  Text(formatCurrency.format(double.parse(state.transaction.map<double>((m) => m.amountTotal).reduce((a,b )=>a+b).toString())), style: TextStyle(fontSize: 16)),
+                                  Text(formatCurrency.format(getSumAmount(state.cartList)), style: TextStyle(fontSize: 16)),
                                 ],
                               ) 
                             )
@@ -361,85 +362,80 @@ class _BeliPaymenViewState extends State<BeliPaymenView>
   }
   
   void insertData() {
-    final blocBeli = BlocProvider.of<BeliBloc>(context); 
-    final blocCurrency = BlocProvider.of<CurrencyBloc>(context); 
+    final blocBeli = BlocProvider.of<BuyBloc>(context); 
     final blocLocation = BlocProvider.of<LocationBloc>(context); 
     final blocPayment = BlocProvider.of<PaymentBloc>(context); 
     var _errMsg = "Oops sorry, something bad happend, please try again!";
 
-    if (blocBeli.currentState.transaction == null){
+    if (blocBeli.currentState.rateList == null){
       Alert(context: context, title: "Alert", desc: "Data transaction is null!").show();
-    }else if (blocCurrency.currentState.currencyModel == null){
-      Alert(context: context, title: "Alert", desc: "Currency is not selected!").show();
     }else if(blocLocation.currentState.location == null){
         Alert(context: context, title: "Alert", desc: "Location is not selected!").show();
     }else if(blocPayment.currentState.payment == null){
         Alert(context: context, title: "Alert", desc: "Payment method is not selected!").show();
     }else{
       try{
-        final transactionCode = "xx1";
-        final currencyCode = blocCurrency.currentState.currencyModel.currencyCode;
+        PopupAlert().alertDialogCuprtino(context, "Please wait...");
+        final transactionCode = "xx2";
+        final currencyCode = "USD";
         final paymentCode = blocPayment.currentState.payment.paymentCode;
         final locationCode = blocLocation.currentState.location.locationCode;
         final pickupCode = "P01";
-        final rateTotal = double.parse(blocBeli.currentState.transaction.map<double>((m) => m.rate).reduce((a,b )=>a+b).toString()); //blocBeli.currentState.rate;
-        final volumeTotal = double.parse(blocBeli.currentState.transaction.map<double>((m) => m.amountTotal).reduce((a,b )=>a+b).toString());//blocBeli.currentState.volume;
-        PopupAlert().alertDialogCuprtino(context, "Please wait...");
+        final amountTotal = double.parse(blocBeli.currentState.cartList.map<double>((m) => m.rate).reduce((a,b )=>a+b).toString()); //blocBeli.currentState.rate;
+        final volumeTotal = getSumAmount(blocBeli.currentState.cartList);//blocBeli.currentState.volume;
+        TransactionModel transactionModel = TransactionModel(
+          transactionCode: transactionCode, 
+          currencyCode: currencyCode,
+          paymentCode: paymentCode,
+          locationCode: locationCode,
+          pickupCode: pickupCode,
+          userName: idUser.toString(),
+          amountTotal: amountTotal,
+          volumeTotal: volumeTotal);
+        
+        List<TransactionDetailModel> transactionDetailModel =  [];
+        for(int i= 0; i < blocBeli.currentState.cartList.length; i++){
+          final uidWallet = blocBeli.currentState.cartList[i].uidWallet;
+          final rate = blocBeli.currentState.cartList[i].rate;
+          final volume = blocBeli.currentState.cartList[i].volume.toDouble();
+          transactionDetailModel.add(TransactionDetailModel(uidWallet: uidWallet, rate: rate, amount: volume ));
+        }
 
-        blocBeli.onInsert(transactionCode, currencyCode, paymentCode, locationCode, pickupCode, idUser, rateTotal, volumeTotal)
+        blocBeli.onInsert("BY", transactionModel, transactionDetailModel)
         .then((result) {
-          if(result.uid != null){
-            for(int i= 0; i < blocBeli.currentState.transaction.length; i++){
-              final uidWallet = blocBeli.currentState.transaction[i].uid;
-              final rate = blocBeli.currentState.transaction[i].rate;
-              final volume = blocBeli.currentState.transaction[i].amountAvail;
-              blocBeli.onInsertDetail(result.uid, uidWallet, rate, volume)
-              .then((res){
-                if (res){
-                  if(i ==  blocBeli.currentState.transaction.length-1){
-                    Navigator.of(context, rootNavigator: true).pop();
-                    showDialog(
-                      context: context,
-                      barrierDismissible: false,
-                      builder: (BuildContext context) {
-                        return new WillPopScope(
-                            onWillPop: () async => false,
-                            child: new CupertinoAlertDialog(
-                            title: new Text("Congratulation, your transaction success, we sent billing to your email", style: TextStyle(fontSize: 12), ),
-                            actions: <Widget>[
-                              new FlatButton(
-                                onPressed: (){
-                                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => 
-                                      new MyHomePage(title: '') 
-                                    )
-                                  );
-                                },
-                                child: new Text("Ok"),
-                              )
-                            ],
-                          ),
-                        );
-                      }
-                    );
-                  }
-                }else{
-                  Navigator.of(context, rootNavigator: true).pop();
-                  PopupAlert().alertDialogCuprtinoMsg(context, _errMsg);
-                }
-              }).catchError((onError) {
-                  Navigator.of(context, rootNavigator: true).pop();
-                  PopupAlert().alertDialogCuprtinoMsg(context, _errMsg);
-              });
-            }
+          if (result.uid != null){
+          Navigator.of(context, rootNavigator: true).pop();
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (BuildContext context) {
+                return new WillPopScope(
+                    onWillPop: () async => false,
+                    child: new CupertinoAlertDialog(
+                    title: new Text("Congratulation, your transaction success, we sent billing to your email", style: TextStyle(fontSize: 12), ),
+                    actions: <Widget>[
+                      new FlatButton(
+                        onPressed: (){
+                          Navigator.of(context).push(MaterialPageRoute(builder: (context) => 
+                              new MyHomePage(title: '') 
+                            )
+                          );
+                        },
+                        child: new Text("Ok"),
+                      )
+                    ],
+                  ),
+                );
+              }
+            );
           }else{
             Navigator.of(context, rootNavigator: true).pop();
-            PopupAlert().alertDialogCuprtinoMsg(context, _errMsg);
+            PopupAlert().alertDialogCuprtinoMsg(context, _errMsg);  
           }
         }).catchError((onError) {
           Navigator.of(context, rootNavigator: true).pop();
           PopupAlert().alertDialogCuprtinoMsg(context, _errMsg);
         });
-        
       }catch(SocketException){
         Navigator.of(context, rootNavigator: true).pop();
         PopupAlert().alertDialogCuprtinoMsg(context, _errMsg);
@@ -447,4 +443,11 @@ class _BeliPaymenViewState extends State<BeliPaymenView>
     }
   }
 
+  double getSumAmount(List<TransactionTempModel> model){
+    double _amount = 0;
+    for(var i = 0; i < model.length; i++){
+      _amount += model[i].volume * model[i].rate;
+    }
+    return _amount;
+  }
 }

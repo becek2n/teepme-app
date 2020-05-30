@@ -70,12 +70,12 @@ class _BottomNavigationState extends State<BottomNavigation>
                           children: <Widget>[
                             Expanded(
                               child: TabIcons(
-                                  tabIconData: widget.tabIconsList[0],
-                                  removeAllSelect: () {
-                                    setRemoveAllSelection(
-                                        widget.tabIconsList[0]);
-                                    widget.changeIndex(0);
-                                  }),
+                                tabIconData: widget.tabIconsList[0],
+                                removeAllSelect: () {
+                                  setRemoveAllSelection(
+                                      widget.tabIconsList[0]);
+                                  widget.changeIndex(0);
+                                }),
                             ),
                             Expanded(
                               child: TabIcons(
@@ -86,7 +86,6 @@ class _BottomNavigationState extends State<BottomNavigation>
                                     widget.changeIndex(1);
                                   }),
                             ),
-                            
                             Expanded(
                               child: TabIcons(
                                   tabIconData: widget.tabIconsList[2],
@@ -165,6 +164,14 @@ class _TabIconsState extends State<TabIcons> with TickerProviderStateMixin {
   }
 
   @override
+  void dispose() {
+    if (widget.tabIconData.animationController != null){
+      widget.tabIconData.animationController.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return AspectRatio(
       aspectRatio: 1,
@@ -188,9 +195,15 @@ class _TabIconsState extends State<TabIcons> with TickerProviderStateMixin {
                   scale: Tween(begin: 0.88, end: 1.0).animate(CurvedAnimation(
                       parent: widget.tabIconData.animationController,
                       curve: Interval(0.1, 1.0, curve: Curves.fastOutSlowIn))),
-                  child: Image.asset(widget.tabIconData.isSelected
+                  child: Column(
+                    children: <Widget>[
+                      
+                      Image.asset(widget.tabIconData.isSelected
                       ? widget.tabIconData.selctedImagePath
-                      : widget.tabIconData.imagePath),
+                      : widget.tabIconData.imagePath, width: 40,),
+                      Text(widget.tabIconData.menuName)
+                    ],
+                  ) 
                 ),
                 Positioned(
                   top: 4,

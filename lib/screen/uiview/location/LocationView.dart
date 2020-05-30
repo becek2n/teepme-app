@@ -7,6 +7,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:teepme/bloc/Transaksi/LocationBloc.dart';
+import 'package:teepme/screen/uiview/widget_collection/LoadingIndicator.dart';
 import 'package:teepme/theme/MainAppTheme.dart';
 
 class LocationView extends StatefulWidget {
@@ -73,93 +74,107 @@ class _LocationViewState extends State<LocationView>{
     mapController = controller;
   }
 
-  
+  Future<bool> getData() async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    return true;
+  }
 
   Widget slidingUpPanel(){
     BorderRadiusGeometry radius = BorderRadius.only(topLeft: Radius.circular(24.0), topRight: Radius.circular(24.0));
-    return BlocBuilder(
-      bloc: widget.bloc,
-      builder: (BuildContext context, LocationState state) {
-        final List<Marker> marker = <Marker>[];
-        if (state.locationList == null){
-          return Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SpinKitRing(color: Colors.lightGreenAccent),
-              ],
-          );
-        }else{
-          if (state.locationList != null){
-            for(int i = 0; i < state.locationList.length; i++){
-              double d = double.parse(state.locationList[i].longitude.toStringAsFixed(6));
-              print(d);
-              marker.add(
-                Marker(
-                  markerId: MarkerId("1"),
-                  position: new LatLng(state.locationList[i].latitude, d ),
-                  infoWindow: InfoWindow(
-                    title: state.locationList[i].name, snippet: state.locationList[i].name
+    return new FutureBuilder(
+      future: getData(),
+      builder: (context, snapshot){
+        if(!snapshot.hasData){
+          return LoadingCupertino();
+        }
+        else{
+          return BlocBuilder(
+            bloc: widget.bloc,
+            builder: (BuildContext context, LocationState state) {
+              final List<Marker> marker = <Marker>[];
+              if (state.locationList == null){
+                return Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SpinKitRing(color: Colors.lightGreenAccent),
+                    ],
+                );
+              }else{
+                if (state.locationList != null){
+                  for(int i = 0; i < state.locationList.length; i++){
+                    double d = double.parse(state.locationList[i].longitude.toStringAsFixed(6));
+                    print(d);
+                    marker.add(
+                      Marker(
+                        markerId: MarkerId("1"),
+                        position: new LatLng(state.locationList[i].latitude, d ),
+                        infoWindow: InfoWindow(
+                          title: state.locationList[i].name, snippet: state.locationList[i].name
+                        ),
+                      )
+                    );
+                  }
+                  
+                }
+                
+                marker.add(
+                      Marker(
+                        markerId: MarkerId("1"),
+                        position: LatLng(-6.250580, 106.826238),
+                        infoWindow: InfoWindow(
+                          title: "Your Location", snippet: "Your"
+                        ),
+                      )
+                    );
+                /*
+                marker.add(
+                      Marker(
+                        markerId: MarkerId("1"),
+                        position: LatLng(-6.257033, 106.855983),
+                        infoWindow: InfoWindow(
+                          title: "Plaza Kalibata"
+                        ),
+                      )
+                    );
+                marker.add(
+                      Marker(
+                        markerId: MarkerId("1"),
+                        position: LatLng(-6.257033, 106.855983),
+                        infoWindow: InfoWindow(
+                          title: "Plaza Kalibata", snippet: "Kalibata"
+                        ),
+                      )
+                    );
+                */
+                return SlidingUpPanel(
+                  controller: _pc,
+                  backdropEnabled: true,
+                  borderRadius: radius,
+                  panel: mapList(),
+                  collapsed: Container(
+                    margin: const EdgeInsets.only(top: 0.0),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: radius),
+                    child: Icon(Icons.drag_handle),
                   ),
-                )
-              );
+                  body: GoogleMap(
+                    mapType: MapType.normal,
+                    initialCameraPosition: _kGooglePlex,
+                    onMapCreated: (GoogleMapController controller) {
+                      _controller.complete(controller);
+                    },
+                    //markers: Set<Marker>.of(marker),
+                    markers: Set<Marker>.of(marker),
+                  ),
+                );
+              }
+              
+              
             }
-            
-          }
-          
-          marker.add(
-                Marker(
-                  markerId: MarkerId("1"),
-                  position: LatLng(-6.250580, 106.826238),
-                  infoWindow: InfoWindow(
-                    title: "Your Location", snippet: "Your"
-                  ),
-                )
-              );
-          /*
-          marker.add(
-                Marker(
-                  markerId: MarkerId("1"),
-                  position: LatLng(-6.257033, 106.855983),
-                  infoWindow: InfoWindow(
-                    title: "Plaza Kalibata"
-                  ),
-                )
-              );
-          marker.add(
-                Marker(
-                  markerId: MarkerId("1"),
-                  position: LatLng(-6.257033, 106.855983),
-                  infoWindow: InfoWindow(
-                    title: "Plaza Kalibata", snippet: "Kalibata"
-                  ),
-                )
-              );
-          */
-          return SlidingUpPanel(
-            controller: _pc,
-            backdropEnabled: true,
-            borderRadius: radius,
-            panel: mapList(),
-            collapsed: Container(
-              margin: const EdgeInsets.only(top: 0.0),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: radius),
-              child: Icon(Icons.drag_handle),
-            ),
-            body: GoogleMap(
-              mapType: MapType.normal,
-              initialCameraPosition: _kGooglePlex,
-              onMapCreated: (GoogleMapController controller) {
-                _controller.complete(controller);
-              },
-              //markers: Set<Marker>.of(marker),
-              markers: Set<Marker>.of(marker),
-            ),
           );
         }
-        
-        
       }
     );
+          
     
   }
 

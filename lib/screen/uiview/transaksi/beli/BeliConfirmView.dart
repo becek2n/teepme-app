@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -17,7 +18,7 @@ class BeliConfirmView extends StatefulWidget {
   final AnimationController mainScreenAnimationController;
   final Animation mainScreenAnimation;
   final TextEditingController textControllerRate, textControllerVolume;
-  final List<TransactionModel> transactionList, transactionSuggestionList;
+  final List<RateModel> transactionList, transactionSuggestionList;
   final LocationBloc blocLocation;
 
   const BeliConfirmView(
@@ -38,6 +39,7 @@ class _BeliConfirmViewState extends State<BeliConfirmView>
   List<Widget> listViews = List<Widget>();
   TextEditingController editingController = TextEditingController();
   final formatCurrency = NumberFormat('#,##0', 'en_US');
+  ProgressDialog pr;
 
   @override
   void initState() {
@@ -62,26 +64,26 @@ class _BeliConfirmViewState extends State<BeliConfirmView>
 
   @override
   Widget build(BuildContext context) {
+    pr = new ProgressDialog(context, isDismissible: false);
     final bloc = BlocProvider.of<BeliBloc>(context); 
     final blocLoc = BlocProvider.of<LocationBloc>(context); 
     blocLoc.onGetData();
-    
-    ProgressDialog pr = new ProgressDialog(context);
-
     return FutureBuilder(
       future: getData(),
       builder: (context, snapshot) {
         if(snapshot.data == null){
-          Future.delayed(Duration.zero, () => pr.show());
+          
+          Future.delayed(Duration.zero, ()=> pr.show());
           return Container();
+          //return Container(child: Center(child: CupertinoActivityIndicator(),));
         }else{
-          Future.delayed(Duration(milliseconds: 2)).then((onvalue) { pr.hide(); });
           return BlocBuilder(
             bloc: bloc,
             builder: (BuildContext context, TransactionBeliState state) {
               if (state.transaction == null){
                 return Container();
               }else{
+                Future.delayed(Duration(milliseconds: 200), ()=> pr.hide());
                 return AnimatedBuilder(
                   animation: widget.mainScreenAnimationController,
                   builder: (BuildContext context, Widget child) {

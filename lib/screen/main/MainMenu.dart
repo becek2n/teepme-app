@@ -1,5 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:teepme/screen/main/MainMainSpecial.dart';
+import 'package:teepme/screen/main/MainSpecial.dart';
 import 'package:teepme/screen/uiview/CurrencyUpdateView.dart';
 import 'package:teepme/screen/uiview/MenuFindView.dart';
 import 'package:teepme/screen/uiview/MenuView.dart';
@@ -61,12 +61,18 @@ class _MainMenu extends State<MainMenu>
 
     super.initState();
   }
+  
+  @override
+  void dispose() {
+    scrollController.dispose();
+    super.dispose();
+  }
 
   void addAllListData() {
     var count = 9;
     
     listViews.add(
-      MainMainSpecial(),
+      MainSpecial(),
     );
 
     /*

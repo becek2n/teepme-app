@@ -3,8 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:teepme/bloc/Master/CurrencyBloc.dart';
 import 'package:teepme/bloc/Master/PaymentBloc.dart';
 import 'package:teepme/bloc/Transaksi/BeliBloc.dart';
+import 'package:teepme/bloc/Transaksi/BuyBloc.dart';
 import 'package:teepme/bloc/Transaksi/LocationBloc.dart';
+import 'package:teepme/main.dart';
 import 'package:teepme/screen/uiview/transaksi/beli/BeliView.dart';
+import 'package:teepme/screen/uiview/transaksi/beli/BuyView.dart';
 import 'package:teepme/theme/MainAppTheme.dart';
 
 class MenuView extends StatefulWidget {
@@ -30,7 +33,7 @@ class _MenuViewState extends State<MenuView>
   List<String> areaListDataText = [
     "Buy",
     "Sell",
-    "Your Items",
+    "History",
   ];
 
   @override
@@ -119,7 +122,6 @@ class AreaView extends StatelessWidget {
   
   @override
   Widget build(BuildContext context) {
-    //TransactionBeliBloc bloc = TransactionBeliBloc();
     return AnimatedBuilder(
         animation: animationController,
         builder: (BuildContext context, Widget child) {
@@ -153,14 +155,22 @@ class AreaView extends StatelessWidget {
                     splashColor: MainAppTheme.nearlyDarkBlue.withOpacity(0.2),
                     onTap: () {
                       if (imageText == "Buy"){
-                        //Navigator.of(context).push(MaterialPageRoute(builder: (context) => new BuyFormView(animationController: animationController,)));
                         Navigator.of(context).push(MaterialPageRoute(builder: (context) => 
-                            //new BlocProvider(
-                            //  bloc: bloc,
-                            //  child: BeliView(animationController: animationController, blocLocation: LocationBloc(),)
-                            //)
-
-                            new BlocProvider<BeliBloc>(
+                            
+                            new BlocProvider<BuyBloc>(
+                              builder: (BuildContext context) => BuyBloc(),
+                              child: BlocProvider<CurrencyBloc>(
+                                builder: (BuildContext context) => CurrencyBloc(),
+                                child: BlocProvider<LocationBloc>(
+                                  builder: (BuildContext context) => LocationBloc(),
+                                  child: BlocProvider<PaymentBloc>(
+                                    builder: (BuildContext context) => PaymentBloc(),
+                                    child: BuyView(animationController: animationController)
+                                  )
+                                )
+                              )
+                            )
+                            /*new BlocProvider<BeliBloc>(
                               builder: (BuildContext context) => BeliBloc(),
                               child: BlocProvider<CurrencyBloc>(
                                 builder: (BuildContext context) => CurrencyBloc(),
@@ -172,9 +182,24 @@ class AreaView extends StatelessWidget {
                                   )
                                 )
                               )
+                            )*/
+                          )
+                        );
+                      }
+                      if(imageText == "History"){
+                        Navigator.of(context).push(MaterialPageRoute(builder: (context) => 
+                            new MyHomePage(title: '', form: "history",) 
+                          )
+                        );
+                        /*
+                        Navigator.of(context).push(MaterialPageRoute(builder: (context) => 
+                            new BlocProvider<TransactionBloc>(
+                              builder: (BuildContext context) => TransactionBloc(),
+                              child: TransactionHistoryView(animationController: animationController) 
                             )
                           )
                         );
+                        */
                       }
                     },
                     child: Column(

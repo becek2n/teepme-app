@@ -4,13 +4,22 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:progress_dialog/progress_dialog.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:teepme/bloc/Master/CurrencyBloc.dart';
+import 'package:teepme/bloc/Master/PaymentBloc.dart';
+import 'package:teepme/bloc/Transaksi/BuyBloc.dart';
+import 'package:teepme/bloc/Transaksi/LocationBloc.dart';
+//import 'package:shared_preferences/shared_preferences.dart';
 import 'package:teepme/models/MenuTabModel.dart';
 import 'package:teepme/screen/main/BottomNavigation.dart';
 import 'package:teepme/screen/main/MainMenu.dart';
-import 'package:teepme/screen/uiview/user/LoginView.dart';
+import 'package:teepme/screen/main/SplashScreen.dart';
+import 'package:teepme/screen/uiview/transaksi/TransactionHistoryPagingView.dart';
+import 'package:teepme/screen/uiview/user/AccountUserView.dart';
 import 'package:teepme/theme/MainAppTheme.dart';
+
+import 'bloc/Transaksi/TransactionBloc.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,13 +50,15 @@ class MyApp extends StatelessWidget {
       ),
       debugShowCheckedModeBanner: false,
       //home: MyHomePage(title: ''),
-      home: LoginView(),
+      //home: LoginView(),
+      home: SplashScreen(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  final String form ;
+  MyHomePage({Key key, this.title, this.form}) : super(key: key);
 
   final String title;
 
@@ -72,12 +83,23 @@ class _MyHomePageState extends State<MyHomePage>
     tabIconsList.forEach((tab) {
       tab.isSelected = false;
     });
-    tabIconsList[0].isSelected = true;
-    
 
-    animationController =
-        AnimationController(duration: Duration(milliseconds: 600), vsync: this);
-    tabBody = MainMenu(animationController: animationController);
+    animationController = AnimationController(duration: Duration(milliseconds: 200), vsync: this);
+    
+    if (widget.form == "home"){
+      tabBody = MainMenu(animationController: animationController);
+    }else if (widget.form == "history"){
+      tabBody = BlocProvider<TransactionBloc>(
+        builder: (BuildContext context) => TransactionBloc(),
+        child: TransactionHistoryPagingView() 
+      );
+      tabIconsList[2].isSelected = true;
+    }else{
+      tabBody = MainMenu(animationController: animationController);
+      tabIconsList[0].isSelected = true;
+    }
+    
+    //tabBody = MainMenu(animationController: animationController);
     super.initState();
   }
 
@@ -90,76 +112,41 @@ class _MyHomePageState extends State<MyHomePage>
   ProgressDialog pr;
   @override
   Widget build(BuildContext context) {
-    pr = new ProgressDialog(context);
-    return FutureBuilder(
-      future: testConnection(),
-      builder: (context, snapshot) {
-        if(snapshot.connectionState == ConnectionState.waiting) {
-          Future.delayed(Duration.zero, () => pr.show());
-          return Container();
-        } else{
-          Future.delayed(Duration(milliseconds: 2)).then((onvalue) {
-            pr.hide();
-          });
-          return Container(
-            color: MainAppTheme.background,
-            child: Scaffold(
-              backgroundColor: Colors.transparent,
-              body: FutureBuilder(
-                future: getData(),
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
-                    return SizedBox();
-                  } else {
-                    return Stack(
-                      children: <Widget>[
-                        tabBody,
-                        bottomBar(),
-                      ],
-                    );
-                  }
-                },
-              ),
-            ),
-          );
-        }
-      }
+    pr = new ProgressDialog(context, isDismissible: false);
+    return Container(
+      color: MainAppTheme.background,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: FutureBuilder(
+          future: getData(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return SizedBox();
+            } else {
+              return new BlocProvider<BuyBloc>(
+                builder: (BuildContext context) => BuyBloc(),
+                child: BlocProvider<CurrencyBloc>(
+                  builder: (BuildContext context) => CurrencyBloc(),
+                  child: BlocProvider<LocationBloc>(
+                    builder: (BuildContext context) => LocationBloc(),
+                    child: BlocProvider<PaymentBloc>(
+                      builder: (BuildContext context) => PaymentBloc(),
+                      child: Stack(
+                        children: <Widget>[
+                          tabBody,
+                          bottomBar(),
+                        ],
+                      )
+                    )
+                  )
+                )
+              );
+            }
+          },
+        ),
+      ),
     );
   }
-
-  SharedPreferences preferences;
-  Future<bool> testConnection() async{
-    bool result;
-    preferences = await SharedPreferences.getInstance();
-    InternetAddress.lookup("google.com")
-      .then((data) {
-        result = true;
-        preferences.setBool("isConnect", true);
-      }).catchError((e) {
-        //alertDialogCuprtino(context, "Error", "Connection lost", "OK");
-        preferences.setBool("isConnect", false);
-    });
-    /*
-    try{
-      await Future.delayed(const Duration(seconds: 2));
-      final check = await InternetAddress.lookup("http://172.20.10.10:3001/");
-      
-      if (check.isNotEmpty)
-        result = true;
-      preferences = await SharedPreferences.getInstance();
-      preferences.setBool("isConnect", true);
-    }catch(_){
-      //Alert(context: context, title: "Alert", desc: "Connection lost!").show();
-      //_showAlert(context);
-      _alertDialogCuprtino();
-      preferences = await SharedPreferences.getInstance();
-      preferences.setBool("isConnect", false);
-    }
-    */
-    return result;
-  }
-
-  
 
   Future<bool> getData() async {
     await Future.delayed(const Duration(milliseconds: 200));
@@ -167,27 +154,37 @@ class _MyHomePageState extends State<MyHomePage>
   }
 
   Widget bottomBar() {
-    return Column(
+    return new Column(
       children: <Widget>[
-        Expanded(
+        new Expanded(
           child: SizedBox(),
         ),
-        BottomNavigation(
+        new BottomNavigation(
           tabIconsList: tabIconsList,
           addClick: () {},
           changeIndex: (index) {
-            if (index == 0 || index == 2) {
+            if (index == 0) {
               animationController.reverse().then((data) {
                 if (!mounted) return;
                 setState(() {
                   tabBody = MainMenu(animationController: animationController);
                 });
               });
-            } else if (index == 1 || index == 3) {
+            } else if (index == 2) {
               animationController.reverse().then((data) {
                 if (!mounted) return;
                 setState(() {
-                  //tabBody = TrainingScreen(animationController: animationController);
+                  tabBody = BlocProvider<TransactionBloc>(
+                            builder: (BuildContext context) => TransactionBloc(),
+                            child: TransactionHistoryPagingView(animationController: animationController) 
+                          );
+                });
+              });
+            } else if (index == 3) {
+              animationController.reverse().then((data) {
+                if (!mounted) return;
+                setState(() {
+                  tabBody = AccountUser(animationController: animationController);
                 });
               });
             }
@@ -196,8 +193,6 @@ class _MyHomePageState extends State<MyHomePage>
       ],
     );
   }  
-
-  
 }
 
 class HexColor extends Color {

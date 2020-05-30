@@ -14,9 +14,9 @@ class PaymentModel {
   {
     final data = PaymentModel(
       paymentCode: jsonMap['PaymentCode'],
-      name: jsonMap['Name'],
-      desc: jsonMap['Desc'],
-      image: jsonMap['Image']
+      name: jsonMap['PaymentName'],
+      desc: jsonMap['PaymentDesc'],
+      image: jsonMap['PaymentImages']
     );
     return data;
   }

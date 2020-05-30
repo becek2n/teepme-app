@@ -1,31 +1,38 @@
+import 'package:badges/badges.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:teepme/bloc/Transaksi/BeliBloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:teepme/bloc/Transaksi/BuyBloc.dart';
 import 'package:teepme/screen/uiview/transaksi/beli/BeliConfirmView.dart';
 import 'package:teepme/screen/uiview/transaksi/beli/BeliFormView.dart';
 import 'package:teepme/screen/uiview/transaksi/beli/BeliPaymentView.dart';
+import 'package:teepme/screen/uiview/transaksi/beli/BeliProcessPaymentView.dart';
+import 'package:teepme/screen/uiview/transaksi/beli/BeliProcessView.dart';
+import 'package:teepme/screen/uiview/transaksi/beli/RateList.dart';
 import 'package:teepme/theme/MainAppTheme.dart';
 
-class BeliView extends StatefulWidget {
+class BuyView extends StatefulWidget {
   final AnimationController animationController;
-  const BeliView({Key key, this.animationController}) : super(key: key);
+  const BuyView({Key key, this.animationController}) : super(key: key);
   
   @override
-  BeliViewState createState() => new BeliViewState();
+  BuyViewState createState() => new BuyViewState();
 
 }
 
-class BeliViewState extends State<BeliView> 
+class BuyViewState extends State<BuyView> 
   with TickerProviderStateMixin {
   int currentStep = 0;
   List<Step> spr;
   AnimationController animationController;
-
+  SharedPreferences preferences;
+  String userName;
+  
   @override
   void initState() {
     animationController = AnimationController(
         duration: Duration(milliseconds: 2000), vsync: this);
-    
+    getDataCart();
     super.initState();
   }
 
@@ -35,33 +42,73 @@ class BeliViewState extends State<BeliView>
     super.dispose();
   }
   
+  void getDataCart() async{
+    final bloc = BlocProvider.of<BuyBloc>(context);
+    preferences = await SharedPreferences.getInstance();
+    var username = preferences.getString("userName");
+      userName = username;
+      bloc.onGetDataCart(username);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: widget.animationController,
-      builder: (BuildContext context, Widget child) {
-        return Container(
-          color: MainAppTheme.background,
-          child: Scaffold(
-            appBar: AppBar(
-              backgroundColor: Colors.white,
-              iconTheme: IconThemeData(
-                  color: Colors.blueGrey, //change your color here
-                ),
-                title: Text("Beli", style: TextStyle(color: Colors.blueGrey)),
-                centerTitle: true,
+    final bloc = BlocProvider.of<BuyBloc>(context);
+    return BlocBuilder(
+      bloc: bloc,
+      builder: (BuildContext context, BuyState state) { 
+        return AnimatedBuilder(
+          animation: widget.animationController,
+          builder: (BuildContext context, Widget child) {
+            return Container(
+              color: MainAppTheme.background,
+              child: Scaffold(
+                appBar: AppBar(
+                  backgroundColor: Colors.white,
+                  iconTheme: IconThemeData(
+                      color: Colors.blueGrey, //change your color here
+                    ),
+                    title: Container(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text("Beli", style: TextStyle(color: Colors.black)),
+                          SizedBox(
+                            height: 38,
+                            width: 38,
+                            child: InkWell(
+                              highlightColor: Colors.transparent,
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(32.0)),
+                              onTap: () {},
+                              child: Center(
+                                child: Badge(
+                                  badgeContent: Text((state.cartList == null) ? "0" : state.cartList.length.toString()),
+                                  child: Icon(
+                                    Icons.shopping_cart,
+                                    color: MainAppTheme.grey,
+                                  ),
+                                ) 
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ) 
+                  ),
+                backgroundColor: Colors.white,
+                body: _typeStep(),
               ),
-            backgroundColor: Colors.white,
-            body: _typeStep(),
-          ),
+            );
+          }
         );
       }
-    );
+    ); 
+        
     
   }
  
   Widget _typeStep() {
-    final bloc = BlocProvider.of<BeliBloc>(context); 
+    final bloc = BlocProvider.of<BuyBloc>(context); 
     return FutureBuilder(
       future: getData(),
       builder: (context, snapshot) {
@@ -70,7 +117,7 @@ class BeliViewState extends State<BeliView>
         }else{ 
           return BlocBuilder(
             bloc: bloc,
-            builder: (context, TransactionBeliState state) {
+            builder: (context, BuyState state) {
               return Container(
                 child: Theme(
                   data: ThemeData(canvasColor: Colors.white),
@@ -80,18 +127,11 @@ class BeliViewState extends State<BeliView>
                     Step(
                       title: Text("Pick"),
                       content: new Wrap(
-                            children:<Widget>[
-                              BeliFormView(
-                                mainScreenAnimation: Tween(begin: 0.0, end: 1.0).animate(
-                                    CurvedAnimation(
-                                        parent: widget.animationController,
-                                        curve: Interval((1 / 0) * 5, 1.0,
-                                            curve: Curves.fastOutSlowIn))),
-                                mainScreenAnimationController: widget.animationController,
-                              ),
-                              
-                            ]
-                          ),
+                        children:<Widget>[
+                          RateList(),
+                          
+                        ]
+                      ),
                       state: ((state.currentStep == null ? 0 : state.currentStep) >= 1) ? StepState.complete : StepState.indexed,
                       isActive: ((state.currentStep == null ? 0 : state.currentStep) == 0) ? true : false
                     ),
@@ -99,7 +139,7 @@ class BeliViewState extends State<BeliView>
                       title: Text("Confirm"),
                       content: new Wrap(
                             children:<Widget>[
-                              BeliConfirmView(
+                              BeliProcessView(
                                 mainScreenAnimation: Tween(begin: 0.0, end: 1.0).animate(
                                     CurvedAnimation(
                                         parent: widget.animationController,
@@ -116,7 +156,7 @@ class BeliViewState extends State<BeliView>
                       title: Text("Payment"),
                       content: new Wrap(
                         children:<Widget>[
-                          BeliPaymenView(
+                          BeliProcessPaymentView(
                             mainScreenAnimation: Tween(begin: 0.0, end: 1.0).animate(
                                 CurvedAnimation(
                                     parent: widget.animationController,

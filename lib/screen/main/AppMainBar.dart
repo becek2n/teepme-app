@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:teepme/theme/MainAppTheme.dart';
 
 class AppBarMainScreen extends StatefulWidget {
@@ -17,19 +18,22 @@ class _AppBarMainScreenState extends State<AppBarMainScreen>
   List<Widget> listViews = List<Widget>();
   //double topBarOpacity = 0.0;
 
+  String _dateFormat;
+
   @override
   void initState() {
     topBarAnimation = Tween(begin: 0.0, end: 1.0).animate(CurvedAnimation(
         parent: widget.animationController,
         curve: Interval(0, 0.5, curve: Curves.fastOutSlowIn)));
+    
+    var _dateNow = new DateTime.now();
+    _dateFormat = (new DateFormat("dd MMM yyyy").format(_dateNow));
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return getAppBarUI();
-
-    //return Text("test");
+    return getAppBarUI(); 
   }
 
 
@@ -98,52 +102,7 @@ class _AppBarMainScreenState extends State<AppBarMainScreen>
                                 onTap: () {},
                                 child: Center(
                                   child: Icon(
-                                    Icons.keyboard_arrow_left,
-                                    color: MainAppTheme.grey,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                left: 8,
-                                right: 8,
-                              ),
-                              child: Row(
-                                children: <Widget>[
-                                  Padding(
-                                    padding: const EdgeInsets.only(right: 8),
-                                    child: Icon(
-                                      Icons.calendar_today,
-                                      color: MainAppTheme.grey,
-                                      size: 18,
-                                    ),
-                                  ),
-                                  Text(
-                                    "15 May",
-                                    textAlign: TextAlign.left,
-                                    style: TextStyle(
-                                      fontFamily: MainAppTheme.fontName,
-                                      fontWeight: FontWeight.normal,
-                                      fontSize: 18,
-                                      letterSpacing: -0.2,
-                                      color: MainAppTheme.darkerText,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(
-                              height: 38,
-                              width: 38,
-                              child: InkWell(
-                                highlightColor: Colors.transparent,
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(32.0)),
-                                onTap: () {},
-                                child: Center(
-                                  child: Icon(
-                                    Icons.keyboard_arrow_right,
+                                    Icons.shopping_cart,
                                     color: MainAppTheme.grey,
                                   ),
                                 ),

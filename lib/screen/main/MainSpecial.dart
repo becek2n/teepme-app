@@ -4,15 +4,16 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:teepme/bloc/PromotionBloc.dart';
+import 'package:teepme/globals.dart' as globals;
 
-class MainMainSpecial extends StatefulWidget{
-  const MainMainSpecial({ Key key }) : super(key: key);
+class MainSpecial extends StatefulWidget{
+  const MainSpecial({ Key key }) : super(key: key);
   @override
-   _MainMainSpecialState createState() =>  _MainMainSpecialState();
+   _MainSpecialState createState() =>  _MainSpecialState();
 }
 
 
-class _MainMainSpecialState extends State<MainMainSpecial>  {
+class _MainSpecialState extends State<MainSpecial>  {
 int _current = 0; 
 List imgSpesial = [
     "lib/assets/images/spesial-1.jpg",
@@ -26,6 +27,11 @@ List imgSpesial = [
     bloc.onGetData();
     super.initState();
 
+  }
+
+  Future<bool> getData() async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    return true;
   }
 
   List<T> map<T>(List list, Function handler) {
@@ -64,8 +70,7 @@ List imgSpesial = [
                         child: ClipRRect(
                           borderRadius: BorderRadius.all(Radius.circular(0.0)),
                           child: Image.network(
-                            //"http://172.20.10.10:3001/" + url.images,
-                            "http://192.168.43.176:3001/" + url.images,
+                            globals.urlAPI + url.images,
                             fit: BoxFit.fill,
                             width: 600.0,
                           ),
@@ -92,6 +97,7 @@ List imgSpesial = [
             ),
           );
         }
-      });
-    }
+      }
+    );
+  }
 }

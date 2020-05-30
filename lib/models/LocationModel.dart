@@ -23,9 +23,9 @@ class LocationModel
       final data = LocationModel( 
         id: jsonMap["ID"],
         locationCode: jsonMap["LocationCode"],
-        image: jsonMap["Images"],
-        name: jsonMap["Name"],
-        address: jsonMap["Address"],
+        image: jsonMap["LocationImages"],
+        name: jsonMap["LocationName"],
+        address: jsonMap["LocationAddress"],
         latitude: double.parse(jsonMap["latitude"]),
         longitude: double.parse(jsonMap["longitude"]));
       return data;

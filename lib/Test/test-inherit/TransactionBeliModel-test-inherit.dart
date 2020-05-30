@@ -10,7 +10,7 @@ class TransactionBeliModelTestInherit {
       visibilityFormInput = true;
   String currencyController = "";
   String currencyResult = "";
-  List<TransactionModel> transaction;
+  List<RateModel> transaction;
 
   TransactionBeliModelTestInherit(this.currentStep, this.currencyCode, this.rate, this.volume, this.visibilityFormInput, 
        this.visibilityFormResult, this.currencyController, this.currencyResult, this.transaction);

@@ -8,6 +8,7 @@ import 'package:teepme/bloc/Transaksi/BeliBloc.dart';
 import 'package:teepme/main.dart';
 import 'package:teepme/models/CurrencyModel.dart';
 import 'package:teepme/models/TransactionModel.dart';
+//import 'package:teepme/screen/uiview/widget_collection/LoadingIndicator.dart';
 import 'package:teepme/theme/MainAppTheme.dart';
 
 import 'package:progress_dialog/progress_dialog.dart';
@@ -33,6 +34,7 @@ class _BeliFormViewState extends State<BeliFormView>
   String currencyCode;
   CurrencyModel modelCorrency;
   final formatCurrency = NumberFormat('#,##0', 'en_US');
+  ProgressDialog pr;
 
   @override
   void initState() {
@@ -55,7 +57,6 @@ class _BeliFormViewState extends State<BeliFormView>
     return true;
   }
   
-  ProgressDialog pr;
 
   void _searchCurrency() {
     final bloc = BlocProvider.of<BeliBloc>(context); 
@@ -63,9 +64,9 @@ class _BeliFormViewState extends State<BeliFormView>
     //if (currencyCode == null){
     //  Alert(context: context, title: "Alert", desc: "Please select currency!").show();
     //}else 
-    if (textControllerRate.text == ""){
+    if (textControllerRate.text.trim() == ""){
       Alert(context: context, title: "Alert", desc: "Please input rate!").show();
-    }else if(textControllerVolume.text == ""){
+    }else if(textControllerVolume.text.trim() == ""){
         Alert(context: context, title: "Alert", desc: "Please input volume!").show();
     }else{
       bloc.onSearchRate(currencyCode, double.parse(textControllerRate.text), double.parse(textControllerVolume.text));
@@ -74,11 +75,12 @@ class _BeliFormViewState extends State<BeliFormView>
 
   @override
   Widget build(BuildContext context) {
-    pr = new ProgressDialog(context);
     return FutureBuilder(
       future: getData(),
       builder: (context, snapshot) {
-        if(snapshot.data == null){
+        if(snapshot.connectionState == ConnectionState.waiting){
+          //return LoadingCupertinoWithoutScaffold();
+          Future.delayed(Duration.zero, () => pr.show());
           return Container();
         }else{
           final bloc = BlocProvider.of<BeliBloc>(context); 
@@ -87,20 +89,16 @@ class _BeliFormViewState extends State<BeliFormView>
             bloc: blocCurrency,
             builder: (BuildContext context, CurrencyState state) {
               if (state.list == null){
-                  Future.delayed(Duration.zero, () => pr.show());
+                //return LoadingCupertinoWithoutScaffold();
                 return Container();
               }else{
-                Future.delayed(Duration(milliseconds: 2)).then((onvalue) {
-                  pr.hide();
-                });
+                Future.delayed(Duration(milliseconds: 200), ()=> pr.hide());
                 return AnimatedBuilder(
                   animation: widget.mainScreenAnimationController,
                   builder: (BuildContext context, Widget child) {
                     return Padding(
                       padding: const EdgeInsets.all(0.0),
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           bloc.currentState.visibilityFormInput ? formInput() : new Container(),
                           SizedBox(
@@ -123,10 +121,13 @@ class _BeliFormViewState extends State<BeliFormView>
   }
 
   Widget formInput() {
+    pr = new ProgressDialog(context, isDismissible: false);
     return FutureBuilder(
       future: getData(),
       builder: (context, snapshot) {
-        if(snapshot.data == null){
+        if(snapshot.connectionState == ConnectionState.waiting){
+          //return LoadingCupertinoWithoutScaffold();
+          Future.delayed(Duration.zero, ()=> pr.show());
           return Container();
         }else{
           final bloc = BlocProvider.of<BeliBloc>(context); 
@@ -135,8 +136,10 @@ class _BeliFormViewState extends State<BeliFormView>
             bloc: blocCurrency,
             builder: (BuildContext context, CurrencyState state) {
               if(state.list == null){
+                //return LoadingCupertinoWithoutScaffold();
                 return Container();
               }else{
+                Future.delayed(Duration(milliseconds: 200), ()=> pr.hide());
                 modelCorrency = modelCorrency ?? state.currencyModel;
                 textControllerRate.text = (textControllerRate.text == "0" || textControllerRate.text == "" ) ? bloc.currentState.rate.toString().replaceAll(".0", "") : textControllerRate.text; 
                 textControllerVolume.text = (textControllerVolume.text == "0" || textControllerVolume.text == "" ) ? bloc.currentState.volume.toString().replaceAll(".0", "") : textControllerVolume.text;
@@ -212,17 +215,18 @@ class _BeliFormViewState extends State<BeliFormView>
   }
 
   Widget formSearchResult() {
+    pr = new ProgressDialog(context, isDismissible: false);
     final bloc = BlocProvider.of<BeliBloc>(context); 
-    pr = new ProgressDialog(context);
     return new FutureBuilder(
       future: getData(),
       builder: (context, snapshot){
-        if(!snapshot.hasData){
-          Future.delayed(Duration.zero, () => pr.show());
+        if(snapshot.connectionState == ConnectionState.waiting){
+          Future.delayed(Duration.zero, ()=> pr.show());
+          //return LoadingCupertinoWithoutScaffold();
           return Container();
         }
         else{
-          Future.delayed(Duration(milliseconds: 2), () => pr.hide());
+          Future.delayed(Duration(milliseconds: 200), ()=> pr.hide());
           return Container(
             padding: const EdgeInsets.only(top: 0.0),
             decoration: BoxDecoration(
@@ -347,7 +351,7 @@ class _BeliFormViewState extends State<BeliFormView>
     );
   }
 
-  Widget searchCurrencyView(List<TransactionModel> dataCurrency, String isSuggestion){
+  Widget searchCurrencyView(List<RateModel> dataCurrency, String isSuggestion){
     if (dataCurrency.length > 0){
       return new Padding(
         padding: const EdgeInsets.all(0.0),

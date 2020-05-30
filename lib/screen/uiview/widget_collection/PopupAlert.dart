@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+class PopupAlert {
+
   void showAlert(BuildContext context){
     showDialog(
       context: context,
@@ -43,7 +45,7 @@ import 'package:flutter/material.dart';
     );
   }
 
-  void alertDialogCuprtino(BuildContext context, String sType, String sContent, String sChildText){
+  void loadingProgress(BuildContext context, String sType, String sContent, String sChildText){
     showDialog(
       context: context,
       child: new CupertinoAlertDialog(
@@ -62,13 +64,42 @@ import 'package:flutter/material.dart';
     );
   }
 
-  void loadingProgress(BuildContext context, String sType){
+  void alertDialogCuprtino(BuildContext context, String sType){
     showDialog(
       context: context,
-      child: new CupertinoAlertDialog(
-        title: new Text(sType),
-        content: new CupertinoActivityIndicator(radius: 20.0),
-      ),
-      barrierDismissible: false
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return new WillPopScope(
+            onWillPop: () async => false,
+            child: new CupertinoAlertDialog(
+          title: new Text(sType),
+          content: new CupertinoActivityIndicator(radius: 13.0),
+        ),
+        );
+      }
     );
   }
+
+  void alertDialogCuprtinoMsg(BuildContext context, String sMsg){
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return new WillPopScope(
+            onWillPop: () async => false,
+            child: new CupertinoAlertDialog(
+            title: new Text(sMsg, style: TextStyle(fontSize: 12), ),
+            actions: <Widget>[
+              new FlatButton(
+                onPressed: (){
+                  Navigator.of(context).pop();
+                },
+                child: new Text("Ok"),
+              )
+            ],
+          ),
+        );
+      }
+    );
+  }
+}

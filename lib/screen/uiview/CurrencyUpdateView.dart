@@ -127,7 +127,7 @@ class _CurrencyUpdateState extends State<CurrencyUpdateView>
                           new Text("Currency",style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
                         ),
                         Padding(
-                          padding: const EdgeInsets.only(left: 55.0, bottom: 20.0),
+                          padding: const EdgeInsets.only(left: 65.0, bottom: 20.0),
                           child:new Text("Max",style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
                         ),
                         Padding(
@@ -144,11 +144,12 @@ class _CurrencyUpdateState extends State<CurrencyUpdateView>
                 index -=1;
                 return Card(
                   child: Padding(
-                    padding: const EdgeInsets.all(2.0),
+                    padding: const EdgeInsets.only(bottom: 5.0, top: 10.0, left: 5.0, right: 5.0),
+                    //padding: const EdgeInsets.all(2.0),
                     child: Row(
                       children: <Widget>[
                         new Padding(
-                          padding: new EdgeInsets.only(right: 10.0),
+                          padding: new EdgeInsets.only(right: 10.0, bottom: 13.0),
                           child: Column(
                             children: <Widget>[
                               new Image.asset(_currency[index]["image"], width: 30.0, alignment: Alignment.centerLeft, ),

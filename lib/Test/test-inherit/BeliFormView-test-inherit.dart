@@ -33,7 +33,7 @@ class _BeliFormViewState extends State<BeliFormView>
       visibilityFormInput = true;
   String currencyResult = "";
   List<CurrencyModel> _currencySelect = <CurrencyModel>[];
-  List<TransactionModel> _transaction = <TransactionModel>[];
+  List<RateModel> _transaction = <RateModel>[];
   final textControllerRate = TextEditingController(), 
         textControllerVolume = TextEditingController();
   double sumOfCurrency = 0;
@@ -339,7 +339,7 @@ class _BeliFormViewState extends State<BeliFormView>
     );
   }
 
-  Widget searchCurrencyView(List<TransactionModel> dataCurrency, String isSuggestion){
+  Widget searchCurrencyView(List<RateModel> dataCurrency, String isSuggestion){
     if (dataCurrency.length > 0){
       return new Padding(
         padding: const EdgeInsets.all(0.0),
