@@ -26,7 +26,7 @@ class _RateListState extends State<RateList>{
   SharedPreferences preferences;
   String userName;
   String currencyCode = "USD";
-  //double paymentTotal;
+
   int volumeAmount = 0;
   final rateController = TextEditingController(),
     volumeController = TextEditingController(text: "0"),
@@ -201,7 +201,8 @@ class _RateListState extends State<RateList>{
                                         height: 30,
                                         child: RaisedButton(
                                           onPressed: (){
-                                            _openShopCart(state.rateList[index]);
+                                            //_openShopCart(state.rateList[index]);
+                                            _openShopCartModal(state.rateList[index]);
                                           },
                                           color: Colors.lightGreen,
                                           textColor: Colors.white,
@@ -226,15 +227,12 @@ class _RateListState extends State<RateList>{
     );
   }
 
-  void _openShopCart(WalletModel walletModel) {
+  void _openShopCartModal(WalletModel walletModel) {
     final bloc = BlocProvider.of<BuyBloc>(context); 
-    showModalBottomSheet(
-      isScrollControlled: true,
-      isDismissible: false,
-      context: context,
-      builder: (BuildContext context) {
-        return Container(
-          height: 240.0,
+    AlertDialog dialog = new AlertDialog(
+      contentPadding: const EdgeInsets.all(10),
+      content: new Container(
+          height: 270.0,
           padding: EdgeInsets.all(10.0),
           child: Column(
             children: <Widget>[
@@ -258,108 +256,113 @@ class _RateListState extends State<RateList>{
               SizedBox(
                 height: 2.0,
               ),
-              ListTile(
-                leading: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(40),
-                    color: Colors.redAccent
+              Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(40),
+                      color: Colors.redAccent
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(walletModel.currencyCode.toString(), style: TextStyle(color: Colors.white),),
+                      ],
+                    ) 
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(walletModel.currencyCode.toString(), style: TextStyle(color: Colors.white),),
-                    ],
-                  ) 
-                ), 
-                title: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(fmf.copyWith(amount: walletModel.rate, symbol: "Rp.", symbolAndNumberSeparator: ' ').output.symbolOnLeft.toString(), style: TextStyle(fontWeight: FontWeight.bold,color: Colors.grey[600]),),
-                    Divider(thickness: 2,),
-                  ],
-                ),
-                trailing: Container(
-                  height: 30,
-                  width: 120,
-                  child: Row(
-                    children: [
-                      Container(
-                        height: 25,
-                        width: 25,
-                        child: new FloatingActionButton(
-                          onPressed: (){
-                            if(volumeAmount <= walletModel.amountAvail){
-                              if(volumeAmount > 0){
-                                volumeAmount = int.parse(volumeController.text.replaceAll(".0", "")) - 1;
-                                volumeController.text = volumeAmount.toString();
-                                paymentTotalController.text = fmf.copyWith(amount: (volumeAmount * walletModel.rate), symbol: "Rp.", symbolAndNumberSeparator: ' ').output.symbolOnLeft.toString();
-                              }
-                            }
-                          },
-                          child:new Icon(
-                            const IconData(0xe15b, fontFamily: 'MaterialIcons'),
-                            color: Colors.black),
-                          backgroundColor: Colors.white,
-                        ),
-                      ),
-                      Container(
-                        height: 25,
-                        width: 60,
-                        child: TextField(
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                            enabledBorder: const OutlineInputBorder(
-                              borderSide: BorderSide(
-                                color: Color(0x4437474F),
+                  Padding(
+                    padding: EdgeInsets.only(left: 30),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(fmf.copyWith(amount: walletModel.rate, symbol: "Rp.", symbolAndNumberSeparator: ' ').output.symbolOnLeft.toString(), style: TextStyle(fontWeight: FontWeight.bold,color: Colors.grey[600]),),
+                        Divider(thickness: 2,),
+                        Container(
+                          height: 30,
+                          width: 120,
+                          child: Row(
+                            children: [
+                              Container(
+                                height: 25,
+                                width: 25,
+                                child: new FloatingActionButton(
+                                  onPressed: (){
+                                    if(volumeAmount <= walletModel.amountAvail){
+                                      if(volumeAmount > 0){
+                                        volumeAmount = int.parse(volumeController.text.replaceAll(".0", "")) - 1;
+                                        volumeController.text = volumeAmount.toString();
+                                        paymentTotalController.text = fmf.copyWith(amount: (volumeAmount * walletModel.rate), symbol: "Rp.", symbolAndNumberSeparator: ' ').output.symbolOnLeft.toString();
+                                      }
+                                    }
+                                  },
+                                  child:new Icon(
+                                    const IconData(0xe15b, fontFamily: 'MaterialIcons'),
+                                    color: Colors.black),
+                                  backgroundColor: Colors.white,
+                                ),
                               ),
-                              borderRadius: BorderRadius.all(Radius.circular(25.0)),
-                            ),
-                            contentPadding: const EdgeInsets.all(10),
+                              Container(
+                                height: 25,
+                                width: 60,
+                                child: TextField(
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                                  keyboardType: TextInputType.number,
+                                  decoration: InputDecoration(
+                                    enabledBorder: const OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Color(0x4437474F),
+                                      ),
+                                      borderRadius: BorderRadius.all(Radius.circular(25.0)),
+                                    ),
+                                    contentPadding: const EdgeInsets.all(10),
+                                  ),
+                                  controller: volumeController,
+                                ),
+                              ),
+                              Container(
+                                height: 25,
+                                width: 25,
+                                child: new FloatingActionButton(
+                                  onPressed: (){
+                                    if(volumeAmount <= walletModel.amountAvail){
+                                      if(volumeAmount >=0){
+                                        volumeAmount = int.parse(volumeController.text.replaceAll(".0", "")) + 1;
+                                        volumeController.text = volumeAmount.toString();
+                                        paymentTotalController.text = fmf.copyWith(amount: (volumeAmount * walletModel.rate), symbol: "Rp.", symbolAndNumberSeparator: ' ').output.symbolOnLeft.toString();
+                                      }
+                                    }
+                                  },
+                                  child: new Icon(Icons.add, color: Colors.black,),
+                                  backgroundColor: Colors.white,
+                                ),
+                              ),
+                            ],
                           ),
-                          controller: volumeController,
                         ),
-                      ),
-                      Container(
-                        height: 25,
-                        width: 25,
-                        child: new FloatingActionButton(
-                          onPressed: (){
-                            if(volumeAmount <= walletModel.amountAvail){
-                              if(volumeAmount >=0){
-                                volumeAmount = int.parse(volumeController.text.replaceAll(".0", "")) + 1;
-                                volumeController.text = volumeAmount.toString();
-                                paymentTotalController.text = fmf.copyWith(amount: (volumeAmount * walletModel.rate), symbol: "Rp.", symbolAndNumberSeparator: ' ').output.symbolOnLeft.toString();
-                              }
-                            }
-                          },
-                          child: new Icon(Icons.add, color: Colors.black,),
-                          backgroundColor: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                      ],
+                    ),
+                  )
+                ],
               ),
               Padding(
-                padding: EdgeInsets.only(top: 10, bottom: 15),
+                padding: EdgeInsets.only(top: 20, bottom: 10),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text("Total Payment ", style: TextStyle( fontSize: 13),),
-                    TextField(
-                      style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-                      controller: paymentTotalController,
-                      textAlign: TextAlign.center,
-                    )
-                  ]
-                ) 
+                      Text("Total Payment ", style: TextStyle( fontSize: 13),),
+                      TextField(
+                        style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                        controller: paymentTotalController,
+                        textAlign: TextAlign.center,
+                      )
+                  ],
                 ),
+              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -409,9 +412,11 @@ class _RateListState extends State<RateList>{
               ),
             ],
           ),
-        );
-      }
+        )
+      
     );
+
+    showDialog(context: context, child: dialog, barrierDismissible: false);
   }
 
   void clearAmount(){
